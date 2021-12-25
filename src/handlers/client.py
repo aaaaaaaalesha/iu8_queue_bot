@@ -17,7 +17,5 @@ async def welcome_msg(message: types.Message):
 def register_client_handlers(dp: Dispatcher) -> None:
     """
     Function for registration all handlers for client.
-    :param dp: current dispatcher;
-    :return: None
     """
     dp.register_message_handler(welcome_msg, commands=['start', 'help'])

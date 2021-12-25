@@ -4,7 +4,7 @@
 from aiogram import executor
 
 from create_bot import dp
-from handlers import client, shared
+from handlers import admin, client, shared
 from db import sqlite_db
 
 
@@ -14,6 +14,7 @@ async def on_startup(_) -> None:
 
 
 if __name__ == '__main__':
+    admin.register_admin_handlers(dp)
     client.register_client_handlers(dp)
     shared.register_shared_handlers(dp)
 

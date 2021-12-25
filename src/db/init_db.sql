@@ -6,15 +6,15 @@ CREATE TABLE IF NOT EXISTS admin
 
 CREATE TABLE IF NOT EXISTS queues_list
 (
-    id         INTEGER PRIMARY KEY,
-    queue_name VARCHAR(255),
-    start      INTEGER,
-    admin_id   INTEGER REFERENCES admin (admin_id)
+    id          INTEGER PRIMARY KEY,
+    assignee_id INTEGER REFERENCES admin (admin_id),
+    queue_name  VARCHAR(255),
+    start       timestamp
 );
 
 CREATE TABLE IF NOT EXISTS queue
 (
-    id REFERENCES queues_list (id),
+    id          INTEGER REFERENCES queues_list (id),
     queuer_id   INTEGER,
     queuer_name VARCHAR(255)
 );

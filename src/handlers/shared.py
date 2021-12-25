@@ -12,7 +12,5 @@ async def echo(message: types.Message):
 def register_shared_handlers(dp: Dispatcher) -> None:
     """
     Function for registration all handlers for everyone.
-    :param dp: current dispatcher;
-    :return: None
     """
     dp.register_message_handler(echo)
