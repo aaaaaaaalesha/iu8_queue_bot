@@ -76,6 +76,7 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+sandbox.ipynb
 
 # IPython
 profile_default/
@@ -104,11 +105,13 @@ celerybeat.pid
 # Environments
 .env
 .venv
+.idea
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+
 
 # Spyder project settings
 .spyderproject
@@ -127,3 +130,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# db
+src/queue_bot.db
