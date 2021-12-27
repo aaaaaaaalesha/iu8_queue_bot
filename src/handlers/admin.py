@@ -1,6 +1,5 @@
 # Copyright 2021 aaaaaaaalesha
 
-
 from datetime import datetime, timedelta
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
@@ -9,6 +8,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from src.create_bot import dp, bot
 from src.db.sqlite_db import sql_add_queue, sql_add_admin
 from src.keyboards import admin_kb
+from src.services.admin_service import EarlierException, parse_str_to_datetime
 
 
 class FSMAdmin(StatesGroup):
@@ -51,29 +51,6 @@ async def set_queue_name(message: types.Message, state: FSMContext) -> None:
     )
 
 
-class EarlierException(Exception):
-    pass
-
-
-def parse_str_to_datetime(text: str) -> datetime:
-    resulted_dt: datetime
-    dt_now = datetime.now()
-    if text.startswith("сегодня в ") or text.startswith("сегодня "):
-        h, m = tuple(map(int, text[-5:].split(':')))
-        resulted_dt = dt_now.replace(hour=h, minute=m, second=0)
-    elif text.startswith("завтра в ") or text.startswith("завтра "):
-        h, m = tuple(map(int, text[-5:].split(':')))
-        tomorrow_dt = dt_now + timedelta(days=1)
-        resulted_dt = tomorrow_dt.replace(hour=h, minute=m, second=0)
-    else:
-        resulted_dt = datetime.strptime(text, '%d.%m.%Y %H:%M')
-
-    if resulted_dt < dt_now:
-        raise EarlierException(f"❌ Введённое время раньше текущего!\nСейчас {dt_now.strftime('%d.%m.%Y %H:%M')}")
-
-    return resulted_dt
-
-
 async def set_start_time(message: types.Message, state: FSMContext) -> None:
     start_datetime: datetime
     async with state.proxy() as data:
@@ -100,8 +77,10 @@ async def set_start_time(message: types.Message, state: FSMContext) -> None:
     queue_name = data['queue_name']
     await sql_add_queue(message.from_user.id, queue_name, start_datetime)
 
-    await bot.send_message(message.from_user.id,
-                           f"Очередь {queue_name} создана!\nНачало очереди: {start_datetime.strftime('%d.%m.%Y %H:%M')}\n")
+    await bot.send_message(
+        message.from_user.id,
+        f"✅Очередь {queue_name} создана!\nНачало очереди: {start_datetime.strftime('%d.%m.%Y %H:%M')}"
+    )
     await state.finish()
 
 
