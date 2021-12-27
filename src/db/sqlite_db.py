@@ -19,6 +19,14 @@ def start_db() -> None:
         print("Data base has been connected!")
 
 
+def sql_get_queue_list(admin_id_: int) -> list:
+    cursor.execute(
+        f"SELECT queue_name, start FROM queues_list WHERE assignee_id = {admin_id_}"
+    )
+
+    return cursor.fetchall()
+
+
 async def sql_add_admin(admin_id_: int, user_name_: str) -> None:
     cursor.execute(
         "INSERT INTO admin VALUES (?, ?)",

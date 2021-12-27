@@ -6,7 +6,7 @@ from src.create_bot import dp, bot
 
 
 async def echo(message: types.Message):
-    await message.answer(message.text)
+    await message.answer("[ЭХО]: " + message.text)
 
 
 def register_shared_handlers(dp: Dispatcher) -> None:
