@@ -1,3 +1,7 @@
+DROP TABLE IF EXISTS admin;
+DROP TABLE IF EXISTS queues_list;
+DROP TABLE IF EXISTS queue;
+
 CREATE TABLE IF NOT EXISTS admin
 (
     admin_id INTEGER,

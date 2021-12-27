@@ -43,10 +43,10 @@ async def set_queue_name(message: types.Message, state: FSMContext) -> None:
 def parse_str_to_datetime(text: str) -> datetime:
     resulted_dt: datetime
     dt_now = datetime.now()
-    if text.startswith("сегодня в "):
+    if text.startswith("сегодня в ") or text.startswith("сегодня ") :
         h, m = tuple(map(int, text[-5:].split(':')))
         resulted_dt = dt_now.replace(hour=h, minute=m, second=0)
-    elif text.startswith("завтра в "):
+    elif text.startswith("завтра в ") or text.startswith("завтра ") :
         h, m = tuple(map(int, text[-5:].split(':')))
         tomorrow_dt = dt_now + timedelta(days=1)
         resulted_dt = tomorrow_dt.replace(hour=h, minute=m, second=0)
