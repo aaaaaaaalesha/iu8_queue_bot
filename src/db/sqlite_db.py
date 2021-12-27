@@ -20,7 +20,10 @@ def start_db() -> None:
 
 
 async def sql_add_admin(admin_id_: int, user_name_: str) -> None:
-    cursor.execute("INSERT INTO admin VALUES (?, ?)", (admin_id_, user_name_))
+    cursor.execute(
+        "INSERT INTO admin VALUES (?, ?)",
+        (admin_id_, user_name_)
+    )
     conn.commit()
 
 
