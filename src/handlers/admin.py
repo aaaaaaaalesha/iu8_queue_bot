@@ -1,6 +1,6 @@
 # Copyright 2021 aaaaaaaalesha
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
@@ -8,13 +8,14 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 
 from src.create_bot import dp, bot
 from src.db.sqlite_db import sql_get_queue_list, sql_add_queue, sql_add_admin, sql_delete_queue
-from src.keyboards import admin_kb
+from src.keyboards import admin_kb, calendar_kb
 from src.keyboards.client_kb import main_kb
 from src.services.admin_service import EarlierException, parse_to_datetime
 
-# initial trigger
+
 class FSMPlanning(StatesGroup):
     queue_name = State()
+    start_date = State()
     start_datetime = State()
 
 
@@ -34,7 +35,7 @@ async def queues_list_handler(msg: types.Message) -> tuple:
 
     out_str = str()
     for _, queue_name, dt in found_queues:
-        out_str += f"📌«{queue_name}» {datetime.strptime(dt, '%Y-%m-%d %H:%M:%S.%f').strftime('%d.%m.%Y в %H:%M')}\n"
+        out_str += f"📌«{queue_name}» {datetime.strptime(dt, '%Y-%m-%d %H:%M:%S').strftime('%d.%m.%Y в %H:%M')}\n"
 
     planned_msg = await bot.send_message(msg.from_user.id, f"⤵️ Вот запланированные вами очереди:\n{out_str}")
 
@@ -77,22 +78,33 @@ async def set_queue_name_handler(msg: types.Message, state: FSMContext) -> None:
     await FSMPlanning.next()
     await bot.send_message(
         msg.from_user.id,
-        '🕘 Теперь задайте время запуска очереди одним из способов:\n- в формате: "дд.мм.гг чч:мм" ('
-        'ex. "21.01.2022 15:40")\n- "сегодня в чч:мм"\n- "завтра в чч:мм"\n',
-        reply_markup=admin_kb.inl_cancel_kb
+        '📅 Теперь задайте дату запуска очереди через календарь:',
+        reply_markup=await calendar_kb.Calendar().start_calendar()
     )
+
+
+async def set_date_handler(callback: types.CallbackQuery, callback_data: dict, state: FSMContext) -> None:
+    selected, date = await calendar_kb.Calendar().process_selection(callback, callback_data)
+    if selected:
+        async with state.proxy() as data:
+            data["selected_date"] = date
+        await FSMPlanning.next()
+        await bot.send_message(
+            callback.from_user.id,
+            '🕓 Теперь задайте время запуска очереди в формате чч:мм (ex. "15:40")',
+            reply_markup=admin_kb.inl_cancel_kb
+        )
 
 
 async def set_datetime_handler(msg: types.Message, state: FSMContext) -> None:
     start_datetime: datetime
     async with state.proxy() as data:
         try:
-            start_datetime = parse_to_datetime(msg.text)
+            start_datetime = parse_to_datetime(data["selected_date"], msg.text)
         except ValueError:
             await bot.send_message(
                 msg.from_user.id,
-                '❌ Время задано неверно! Проверьте правильность формата:\n- "дд.мм.гг чч:мм" ('
-                'ex. "21.01.2022 15:40")\n- "сегодня в чч:мм"\n- "завтра в чч:мм"\n',
+                '❌ Время задано неверно! Проверьте правильность формата:\n- "чч:мм" (ex. "15:40")',
                 reply_markup=admin_kb.inl_cancel_kb
             )
             return
@@ -119,7 +131,7 @@ async def set_datetime_handler(msg: types.Message, state: FSMContext) -> None:
 async def choose_delqueue_handler(msg: types.Message) -> None:
     planned_queues, del_msg = await queues_list_handler(msg)
 
-    if not planned_queues:
+    if not planned_queues or del_msg is None:
         return
 
     inl_kb_choices = admin_kb.inl_delete_choices
@@ -155,6 +167,9 @@ def register_admin_handlers(dp: Dispatcher) -> None:
     dp.register_message_handler(queues_list_handler, Text(equals='🗒 Список запланированных очередей'), state=None)
     dp.register_callback_query_handler(cancel_plan_handler, text="cancel_call", state="*")
     dp.register_message_handler(set_queue_name_handler, content_types='text', state=FSMPlanning.queue_name)
+    dp.register_callback_query_handler(
+        set_date_handler, calendar_kb.calendar_callback.filter(), state=FSMPlanning.start_date
+    )
     dp.register_message_handler(set_datetime_handler, content_types='text', state=FSMPlanning.start_datetime)
     dp.register_message_handler(choose_delqueue_handler, commands='delete_queue', state=None)
     dp.register_message_handler(choose_delqueue_handler, Text(equals='🗑 Удалить очередь'), state=None)

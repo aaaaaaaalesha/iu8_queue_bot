@@ -7,21 +7,12 @@ class EarlierException(Exception):
     pass
 
 
-def parse_to_datetime(text: str) -> datetime:
-    resulted_dt: datetime
-    text = text.lower()
+def parse_to_datetime(date: datetime, text: str) -> datetime:
     dt_now = datetime.now()
-    if text.startswith("сегодня в ") or text.startswith("сегодня "):
-        h, m = tuple(map(int, text[-5:].split(':')))
-        resulted_dt = dt_now.replace(hour=h, minute=m, second=0)
-    elif text.startswith("завтра в ") or text.startswith("завтра "):
-        h, m = tuple(map(int, text[-5:].split(':')))
-        tomorrow_dt = dt_now + timedelta(days=1)
-        resulted_dt = tomorrow_dt.replace(hour=h, minute=m, second=0)
-    else:
-        resulted_dt = datetime.strptime(text, '%d.%m.%Y %H:%M')
+    h, m = tuple(map(int, text.split(':')))
 
-    if resulted_dt < dt_now:
-        raise EarlierException(f"❌ Введённое время раньше текущего!\nСейчас {dt_now.strftime('%d.%m.%Y %H:%M')}")
+    resulted_date = date
+    if resulted_date.replace(hour=h, minute=m, second=0, tzinfo=dt_now.tzinfo) < datetime.now():
+        raise EarlierException(f"❌ Введённое время раньше текущего!\nСейчас {dt_now.strftime('%H:%M')}")
 
-    return resulted_dt
+    return date.replace(hour=h, minute=m, second=0, tzinfo=dt_now.tzinfo)
