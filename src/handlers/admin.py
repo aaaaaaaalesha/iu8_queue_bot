@@ -12,7 +12,7 @@ from src.keyboards import admin_kb
 from src.keyboards.client_kb import main_kb
 from src.services.admin_service import EarlierException, parse_to_datetime
 
-
+# initial trigger
 class FSMPlanning(StatesGroup):
     queue_name = State()
     start_datetime = State()
