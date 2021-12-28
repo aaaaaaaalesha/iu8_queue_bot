@@ -20,4 +20,4 @@ def register_client_handlers(dp: Dispatcher) -> None:
     """
     Function for registration all handlers for client.
     """
-    dp.register_message_handler(start_handler, commands=['start', 'help'])
+    dp.register_message_handler(start_handler, commands=['start', 'help'], state=None)

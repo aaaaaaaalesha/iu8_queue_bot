@@ -13,4 +13,4 @@ def register_shared_handlers(dp: Dispatcher) -> None:
     """
     Function for registration all handlers for everyone.
     """
-    dp.register_message_handler(echo)
+    dp.register_message_handler(echo, state=None)
