@@ -21,7 +21,7 @@ def start_db() -> None:
 
 def sql_get_queue_list(admin_id_: int) -> list:
     cursor.execute(
-        f"SELECT queue_name, start FROM queues_list WHERE assignee_id = {admin_id_}"
+        f"SELECT queue_name, start FROM queues_list WHERE assignee_id = ?", (admin_id_,)
     )
 
     return cursor.fetchall()

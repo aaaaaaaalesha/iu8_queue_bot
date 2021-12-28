@@ -7,8 +7,9 @@ class EarlierException(Exception):
     pass
 
 
-def parse_str_to_datetime(text: str) -> datetime:
+def parse_to_datetime(text: str) -> datetime:
     resulted_dt: datetime
+    text = text.lower()
     dt_now = datetime.now()
     if text.startswith("сегодня в ") or text.startswith("сегодня "):
         h, m = tuple(map(int, text[-5:].split(':')))

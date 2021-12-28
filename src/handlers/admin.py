@@ -10,7 +10,7 @@ from src.create_bot import dp, bot
 from src.db.sqlite_db import sql_get_queue_list, sql_add_queue, sql_add_admin
 from src.keyboards import admin_kb
 from src.keyboards.client_kb import main_kb
-from src.services.admin_service import EarlierException, parse_str_to_datetime
+from src.services.admin_service import EarlierException, parse_to_datetime
 
 
 class FSMAdmin(StatesGroup):
@@ -18,7 +18,7 @@ class FSMAdmin(StatesGroup):
     start_datetime = State()
 
 
-async def get_queues_list(message: types.Message) -> None:
+async def queues_list_handler(message: types.Message) -> None:
     found_queues = sql_get_queue_list(message.from_user.id)
     if not found_queues:
         await bot.send_message(
@@ -30,12 +30,12 @@ async def get_queues_list(message: types.Message) -> None:
 
     out_str = str()
     for queue_name, dt in found_queues:
-        out_str += f"«{queue_name}» {datetime.strptime(dt, '%Y-%m-%d %H:%M:%S.%f').strftime('%d.%m.%Y в %H:%M')}\n"
+        out_str += f"📌«{queue_name}» {datetime.strptime(dt, '%Y-%m-%d %H:%M:%S.%f').strftime('%d.%m.%Y в %H:%M')}\n"
 
     await bot.send_message(message.from_user.id, f"⤵️ Вот запланированные вами очереди:\n{out_str}")
 
 
-async def triggering_plan_queue(callback: types.CallbackQuery) -> None:
+async def queue_plan_inlbutton_handler(callback: types.CallbackQuery) -> None:
     await callback.answer('📑 Переходим к планированию очереди...')
     await FSMAdmin.queue_name.set()
 
@@ -45,7 +45,7 @@ async def triggering_plan_queue(callback: types.CallbackQuery) -> None:
                            reply_markup=admin_kb.inl_cancel_kb)
 
 
-async def queue_planning_start(message: types.Message) -> None:
+async def queue_plan_handler(message: types.Message) -> None:
     await FSMAdmin.queue_name.set()
 
     await sql_add_admin(message.from_user.id, message.from_user.username)
@@ -54,12 +54,12 @@ async def queue_planning_start(message: types.Message) -> None:
                            reply_markup=admin_kb.inl_cancel_kb)
 
 
-async def cancel_queue_creation(callback: types.CallbackQuery, state: FSMContext) -> None:
+async def cancel_plan_handler(callback: types.CallbackQuery, state: FSMContext) -> None:
     await callback.answer('🚫 Создание очереди отменено')
     await state.finish()
 
 
-async def set_queue_name(message: types.Message, state: FSMContext) -> None:
+async def set_queue_name_handler(message: types.Message, state: FSMContext) -> None:
     if not message.text:
         await bot.send_message(
             message.from_user.id, '❌ Кажется, вы ничего не написали! Задайте название очереди',
@@ -77,11 +77,11 @@ async def set_queue_name(message: types.Message, state: FSMContext) -> None:
     )
 
 
-async def set_start_time(message: types.Message, state: FSMContext) -> None:
+async def set_datetime_handler(message: types.Message, state: FSMContext) -> None:
     start_datetime: datetime
     async with state.proxy() as data:
         try:
-            start_datetime = parse_str_to_datetime(message.text)
+            start_datetime = parse_to_datetime(message.text)
         except ValueError:
             await bot.send_message(
                 message.from_user.id,
@@ -115,11 +115,11 @@ def register_admin_handlers(dp: Dispatcher) -> None:
     Function for registration all handlers for admin.
     :return: None
     """
-    dp.register_message_handler(queue_planning_start, commands='create_queue', state=None)
-    dp.register_callback_query_handler(triggering_plan_queue, text="plan_queue")
-    dp.register_message_handler(queue_planning_start, Text(equals='📌 Запланировать очередь'))
-    dp.register_callback_query_handler(triggering_plan_queue, text="plan_queue")
-    dp.register_message_handler(get_queues_list, Text(equals='🗒 Список запланированных очередей'))
-    dp.register_callback_query_handler(cancel_queue_creation, text="cancel_call", state="*")
-    dp.register_message_handler(set_queue_name, content_types='text', state=FSMAdmin.queue_name)
-    dp.register_message_handler(set_start_time, content_types='text', state=FSMAdmin.start_datetime)
+    dp.register_message_handler(queue_plan_handler, commands='create_queue', state=None)
+    dp.register_callback_query_handler(queue_plan_inlbutton_handler, text="plan_queue")
+    dp.register_message_handler(queue_plan_handler, Text(equals='📌 Запланировать очередь'))
+    dp.register_callback_query_handler(queue_plan_inlbutton_handler, text="plan_queue")
+    dp.register_message_handler(queues_list_handler, Text(equals='🗒 Список запланированных очередей'))
+    dp.register_callback_query_handler(cancel_plan_handler, text="cancel_call", state="*")
+    dp.register_message_handler(set_queue_name_handler, content_types='text', state=FSMAdmin.queue_name)
+    dp.register_message_handler(set_datetime_handler, content_types='text', state=FSMAdmin.start_datetime)

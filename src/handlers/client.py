@@ -6,7 +6,7 @@ from src.create_bot import dp, bot
 from src.keyboards.client_kb import main_kb
 
 
-async def welcome_msg(message: types.Message):
+async def start_handler(message: types.Message):
     """
     Handler for `/start` or `/help` command.
     """
@@ -20,4 +20,4 @@ def register_client_handlers(dp: Dispatcher) -> None:
     """
     Function for registration all handlers for client.
     """
-    dp.register_message_handler(welcome_msg, commands=['start', 'help'])
+    dp.register_message_handler(start_handler, commands=['start', 'help'])
