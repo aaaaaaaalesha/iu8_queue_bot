@@ -19,6 +19,7 @@ async def start_handler(message: types.Message):
                            reply_markup=main_kb
                            )
 
+# TODO: handle queue requests here
 
 
 def register_client_handlers(dp: Dispatcher) -> None:

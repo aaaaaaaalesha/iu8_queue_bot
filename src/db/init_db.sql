@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS queues_list
 
 CREATE TABLE IF NOT EXISTS queue
 (
-    id          INTEGER REFERENCES queues_list (id),
+    id          INTEGER PRIMARY KEY REFERENCES queues_list (id),
+    datetime    TIMESTAMP,
     queuer_id   INTEGER,
     queuer_name VARCHAR(255)
 );

@@ -11,7 +11,7 @@ from src.create_bot import dp, bot
 from src.db.sqlite_db import sql_get_queue_list, sql_add_queue, sql_add_admin, sql_delete_queue, sql_get_managed_chats, \
     sql_get_chat_title
 from src.keyboards import admin_kb, calendar_kb
-from src.keyboards.client_kb import main_kb
+from src.keyboards.client_kb import PLAN_QUEUE_TEXT, DELETE_QUEUE_TEXT, PLANNED_QUEUES_TEXT
 from src.services.admin_service import EarlierException, parse_to_datetime, wait_for_queue_launch
 
 
@@ -109,7 +109,7 @@ async def queue_set_chat_handler(callback: types.CallbackQuery, state: FSMContex
 
 
 async def set_queue_name_handler(msg: types.Message, state: FSMContext) -> None:
-    if not msg.text:
+    if not msg.text or msg.text in (PLAN_QUEUE_TEXT, DELETE_QUEUE_TEXT, PLANNED_QUEUES_TEXT):
         await bot.send_message(
             msg.from_user.id, '❌ Кажется, вы ничего не написали! Задайте название очереди',
             reply_markup=admin_kb.inl_cancel_kb
@@ -179,7 +179,6 @@ async def set_datetime_handler(msg: types.Message, state: FSMContext) -> None:
     await state.finish()
 
     await wait_for_queue_launch(start_datetime, chat_id)
-
 
 
 """ Deleting queue zone"""
