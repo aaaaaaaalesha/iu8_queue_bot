@@ -5,14 +5,16 @@
 
 CREATE TABLE IF NOT EXISTS admin
 (
-    admin_id INTEGER,
+    admin_id PRIMARY KEY,
     username VARCHAR(255)
 );
 
-CREATE TABLE IF NOT EXISTS chat (
-    id INTEGER PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS chat
+(
+    id          INTEGER PRIMARY KEY,
     assignee_id INTEGER REFERENCES admin (admin_id),
-    chat_id INTEGER
+    chat_id     INTEGER,
+    chat_title  VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS queues_list
@@ -20,8 +22,9 @@ CREATE TABLE IF NOT EXISTS queues_list
     id          INTEGER PRIMARY KEY,
     assignee_id INTEGER REFERENCES admin (admin_id),
     queue_name  VARCHAR(255),
-    start       timestamp,
-    chat_id     INTEGER
+    start       TIMESTAMP,
+    chat_id     INTEGER,
+    chat_title  VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS queue
