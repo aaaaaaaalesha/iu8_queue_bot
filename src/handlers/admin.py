@@ -12,7 +12,7 @@ from src.db.sqlite_db import sql_get_queue_list, sql_add_queue, sql_add_admin, s
     sql_get_chat_title
 from src.keyboards import admin_kb, calendar_kb
 from src.keyboards.client_kb import main_kb
-from src.services.admin_service import EarlierException, parse_to_datetime
+from src.services.admin_service import EarlierException, parse_to_datetime, wait_for_queue_launch
 
 
 class FSMPlanning(StatesGroup):
@@ -164,15 +164,22 @@ async def set_datetime_handler(msg: types.Message, state: FSMContext) -> None:
     chat_id, chat_title = data['chat_id'], data['chat_title']
     await sql_add_queue(msg.from_user.id, queue_name, start_datetime, chat_id, chat_title)
 
-    # await wait_for_queue_launch()
-
     await bot.send_message(
         msg.from_user.id,
         f"✅Очередь «{queue_name}» запланирована в чате «{chat_title}»!\n"
         f"Начало очереди: {start_datetime.strftime('%d.%m.%Y в %H:%M')}"
     )
 
+    await bot.send_message(
+        chat_id,
+        f"✅Очередь «{queue_name}» запланирована!\n"
+        f"Начало очереди: {start_datetime.strftime('%d.%m.%Y в %H:%M')}"
+    )
+
     await state.finish()
+
+    await wait_for_queue_launch(start_datetime, chat_id)
+
 
 
 """ Deleting queue zone"""
