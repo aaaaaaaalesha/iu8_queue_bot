@@ -46,8 +46,6 @@ async def queue_plan_inlbutton_handler(callback: types.CallbackQuery) -> None:
     await callback.answer('📑 Переходим к планированию очереди...')
     await FSMPlanning.queue_name.set()
 
-    await sql_add_admin(callback.from_user.id, callback.from_user.username)
-
     await bot.send_message(callback.from_user.id, "📝 Задайте название очереди",
                            reply_markup=admin_kb.inl_cancel_kb)
 

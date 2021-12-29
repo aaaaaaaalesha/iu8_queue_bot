@@ -1,6 +1,6 @@
 # Copyright 2021 aaaaaaaalesha
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 class EarlierException(Exception):

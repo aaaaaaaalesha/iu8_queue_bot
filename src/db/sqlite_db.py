@@ -35,6 +35,25 @@ async def sql_add_admin(admin_id_: int, user_name_: str) -> None:
     conn.commit()
 
 
+async def sql_add_managed_chat(admin_id_: int, chat_id_: int) -> None:
+    cursor.execute(
+        "INSERT INTO chat ('assignee_id', 'chat_id') VALUES (?, ?)",
+        (admin_id_, chat_id_)
+    )
+    conn.commit()
+
+
+async def sql_delete_managed_chat(chat_id_: int) -> None:
+    cursor.execute(
+        "DELETE FROM chat WHERE chat_id = ?", (chat_id_,)
+    )
+    conn.commit()
+    cursor.execute(
+        "DELETE FROM queues_list WHERE chat_id = ?", (chat_id_,)
+    )
+    conn.commit()
+
+
 async def sql_add_queue(admin_id_: int, queue_name_: str, start_dt: datetime):
     cursor.execute(
         "INSERT INTO queues_list ('assignee_id', 'queue_name', 'start') VALUES (?, ?, ?)",

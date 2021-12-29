@@ -1,6 +1,7 @@
--- DROP TABLE IF EXISTS admin;
--- DROP TABLE IF EXISTS queues_list;
--- DROP TABLE IF EXISTS queue;
+DROP TABLE IF EXISTS admin;
+DROP TABLE IF EXISTS chat;
+DROP TABLE IF EXISTS queues_list;
+DROP TABLE IF EXISTS queue;
 
 CREATE TABLE IF NOT EXISTS admin
 (
@@ -8,12 +9,19 @@ CREATE TABLE IF NOT EXISTS admin
     username VARCHAR(255)
 );
 
+CREATE TABLE IF NOT EXISTS chat (
+    id INTEGER PRIMARY KEY,
+    assignee_id INTEGER REFERENCES admin (admin_id),
+    chat_id INTEGER
+);
+
 CREATE TABLE IF NOT EXISTS queues_list
 (
     id          INTEGER PRIMARY KEY,
     assignee_id INTEGER REFERENCES admin (admin_id),
     queue_name  VARCHAR(255),
-    start       timestamp
+    start       timestamp,
+    chat_id     INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS queue

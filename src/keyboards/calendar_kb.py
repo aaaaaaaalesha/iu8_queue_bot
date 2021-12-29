@@ -3,6 +3,7 @@
 import calendar
 from datetime import datetime, timedelta
 
+from aiogram import md
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.callback_data import CallbackData
 from aiogram.types import CallbackQuery
@@ -99,7 +100,7 @@ class Calendar:
 
         # Processing empty buttons, answering with no action.
         if data['act'] == "IGNORE":
-            await query.answer(cache_time=60)
+            await query.answer("Мимо 🤷‍♂️", cache_time=60)
         # User picked a day button, return date.
         if data['act'] == "DAY":
             await query.message.delete_reply_markup()  # removing inline keyboard
