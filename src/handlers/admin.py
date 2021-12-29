@@ -5,6 +5,7 @@ from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.types import InlineKeyboardMarkup
 
 from src.create_bot import dp, bot
 from src.db.sqlite_db import sql_get_queue_list, sql_add_queue, sql_add_admin, sql_delete_queue
@@ -59,8 +60,9 @@ async def queue_plan_handler(msg: types.Message) -> None:
                            reply_markup=admin_kb.inl_cancel_kb)
 
 
-async def cancel_plan_handler(callback: types.CallbackQuery, state: FSMContext) -> None:
-    await callback.answer('🚫 Создание очереди отменено')
+async def cancel_handler(callback: types.CallbackQuery, state: FSMContext) -> None:
+    await callback.message.delete()
+    await callback.answer('🚫 Действие отменено')
     await state.finish()
 
 
@@ -132,15 +134,16 @@ async def choose_delqueue_handler(msg: types.Message) -> None:
     if not planned_queues or del_msg is None:
         return
 
-    inl_kb_choices = admin_kb.inl_delete_choices
+    inl_kb_choices = InlineKeyboardMarkup()
     for queue_id, queue_name, _ in planned_queues:
         inl_kb_choices.add(types.InlineKeyboardButton(
             text=queue_name, callback_data=f"delete_queue_{queue_id}")
         )
+    inl_kb_choices.add(admin_kb.cancel_button)
 
-    global msgs_tuple
-    msgs_tuple = (del_msg, await bot.send_message(msg.from_user.id, '🗑 Выберите очередь, которую хотите удалить:',
-                                                  reply_markup=inl_kb_choices))
+    global messages_tuple
+    messages_tuple = (del_msg, await bot.send_message(msg.from_user.id, '🗑 Выберите очередь, которую хотите удалить:',
+                                                      reply_markup=inl_kb_choices))
 
     await FSMDeletion.queue_choice.set()
 
@@ -148,8 +151,8 @@ async def choose_delqueue_handler(msg: types.Message) -> None:
 async def delete_queue_handler(callback: types.CallbackQuery, state: FSMContext):
     await sql_delete_queue(int(callback.data[13:]))
     await callback.answer('💥 Очередь удалена')
-    await msgs_tuple[0].delete()
-    await msgs_tuple[1].delete()
+    await messages_tuple[0].delete()
+    await messages_tuple[1].delete()
     await state.finish()
 
 
@@ -163,7 +166,7 @@ def register_admin_handlers(dp: Dispatcher) -> None:
     dp.register_callback_query_handler(queue_plan_inlbutton_handler, text="plan_queue", state=None)
     dp.register_callback_query_handler(queue_plan_inlbutton_handler, text="plan_queue")
     dp.register_message_handler(queues_list_handler, Text(equals='🗒 Список запланированных очередей'), state=None)
-    dp.register_callback_query_handler(cancel_plan_handler, text="cancel_call", state="*")
+    dp.register_callback_query_handler(cancel_handler, text="cancel_call", state="*")
     dp.register_message_handler(set_queue_name_handler, content_types='text', state=FSMPlanning.queue_name)
     dp.register_callback_query_handler(
         set_date_handler, calendar_kb.calendar_callback.filter(), state=FSMPlanning.start_date
