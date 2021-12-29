@@ -11,9 +11,14 @@ async def start_handler(message: types.Message):
     Handler for `/start` or `/help` command.
     """
     await bot.send_message(message.from_user.id,
-                           f"Hello, {message.from_user.username}! My name is IU8-QueueBot.\nLet's start our work!",
+                           f"Привет, {message.from_user.first_name} (@{message.from_user.username})!\n"
+                           f"Я IU8-QueueBot - бот для создания очередей.\n"
+                           f"Давайте начнём: можете использовать команды "
+                           f"или кнопки клавиатуры для работы со мной. В случае возникновения проблем, пишите "
+                           f"@aaaaaaaalesha",
                            reply_markup=main_kb
                            )
+
 
 
 def register_client_handlers(dp: Dispatcher) -> None:
