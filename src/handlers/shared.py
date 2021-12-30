@@ -24,9 +24,6 @@ async def left_chat_handler(message: types.Message):
         await sql_delete_managed_chat(message.chat.id)
 
 
-
-
-
 def register_shared_handlers(dp: Dispatcher) -> None:
     """
     Function for registration all handlers for everyone.

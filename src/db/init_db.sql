@@ -29,7 +29,6 @@ CREATE TABLE IF NOT EXISTS queues_list
 
 CREATE TABLE IF NOT EXISTS queue
 (
-    id          INTEGER REFERENCES queues_list (id),
-    queuer_id   INTEGER,
-    queuer_name VARCHAR(255)
+    id              INTEGER REFERENCES queues_list (id),
+    msg_id          INTEGER
 );
