@@ -1,4 +1,5 @@
 # Copyright 2021 aaaaaaaalesha
+import asyncio
 import sqlite3
 
 from aiogram import types, Dispatcher
@@ -9,6 +10,8 @@ from src.create_bot import dp, bot
 from src.keyboards.client_kb import main_kb, queue_inl_kb
 from src.db.sqlite_db import sql_add_queuer, sql_delete_queuer
 from src.services import client_service
+
+TIMEOUT = 2.0
 
 
 async def start_handler(message: types.Message):
@@ -41,7 +44,7 @@ async def sign_in_queue_handler(callback: types.CallbackQuery):
 
     new_text = await client_service.add_queuer_text(callback.message.text, queuer_name, queuer_username)
 
-    await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
+    await asyncio.wait_for(callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb), TIMEOUT)
 
 
 async def sign_out_queue_handler(callback: types.CallbackQuery):
@@ -57,35 +60,52 @@ async def sign_out_queue_handler(callback: types.CallbackQuery):
 
     new_text = await client_service.delete_queuer_text(callback.message.text, queuer_username)
 
-    await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
+    await asyncio.wait_for(callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb), TIMEOUT)
 
 
 async def skip_ahead_handler(callback: types.CallbackQuery):
-    queuer_username = callback.from_user.username
-
     new_text, status_code = await client_service.skip_ahead(callback.message.text, callback.from_user.username)
 
     if status_code != client_service.STATUS_OK:
         if status_code == client_service.STATUS_NO_QUEUERS:
             await callback.answer("❕ В очереди ещё нет участников.")
+            return
         if status_code == client_service.STATUS_ONE_QUEUER:
             await callback.answer("❕ В очереди только один участник.")
+            return
         if status_code == client_service.STATUS_NOT_QUEUER:
-            await callback.answer(f"❕ @{queuer_username} ещё не участник очереди.")
+            await callback.answer(f"❕ @{callback.from_user.username} ещё не участник очереди.")
+            return
         if status_code == client_service.STATUS_NO_AFTER:
             await callback.answer("❕ Вы крайний в очереди.")
-        return
+            return
 
-    await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
+    await asyncio.wait_for(callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb), TIMEOUT)
 
 
 async def push_tail_handler(callback: types.CallbackQuery):
-    pass
+    new_text, status_code = await client_service.push_tail(callback.message.text, callback.from_user.username)
+
+    if status_code != client_service.STATUS_OK:
+        if status_code == client_service.STATUS_NO_QUEUERS:
+            await callback.answer("❕ В очереди ещё нет участников.")
+            return
+        if status_code == client_service.STATUS_ONE_QUEUER:
+            await callback.answer("❕ В очереди только один участник.")
+            return
+        if status_code == client_service.STATUS_NOT_QUEUER:
+            await callback.answer(f"❕ @{callback.from_user.username} ещё не участник очереди.")
+            return
+        if status_code == client_service.STATUS_NO_AFTER:
+            await callback.answer("❕ Вы крайний в очереди.")
+            return
+
+    await asyncio.wait_for(callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb), TIMEOUT)
 
 
 def register_client_handlers(dp: Dispatcher) -> None:
     """
-    Function for registration all handlers for client.
+    Function registers all handlers for client.
     """
     dp.register_message_handler(start_handler, commands=['start', 'help'], state=None)
     dp.register_callback_query_handler(sign_in_queue_handler, Text(startswith='sign_in'), state="*")
