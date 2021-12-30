@@ -23,7 +23,7 @@ async def wait_for_queue_launch(start_dt: datetime, chat_id: int, queue_id: int)
         return
 
     msg = await bot.send_message(chat_id,
-                                 f"🆕 🅀🅄🄴🅄🄴 🆕\n"
+                                 f"🆕 🆀🆄🅴🆄🅴 🆕\n"
                                  f"Очередь «{queue_data[2]}» запущена!\n"
                                  f"",
                                  reply_markup=client_kb.queue_inl_kb
