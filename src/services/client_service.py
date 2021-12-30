@@ -3,15 +3,21 @@
 from typing import Tuple
 
 STATUS_OK = 0
-STATUS_NO_QUEUERS = 1
-STATUS_ONE_QUEUER = 2
-STATUS_NOT_QUEUER = 3
-STATUS_NO_AFTER = 4
+STATUS_ALREADY_IN = 1
+STATUS_NO_QUEUERS = 2
+STATUS_ONE_QUEUER = 3
+STATUS_NOT_QUEUER = 4
+STATUS_NO_AFTER = 5
 
 
-async def add_queuer_text(old_text: str, queuer_name: str, queuer_username: str) -> str:
+async def add_queuer_text(old_text: str, queuer_name: str, queuer_username: str) -> Tuple[str, int]:
     lines = old_text.split('\n')
     number: int
+
+    for i in range(2, len(lines)):
+        if lines[i].find(f"@{queuer_username}") != -1:
+            return str(), STATUS_ALREADY_IN
+
     if len(lines) == 2:
         number = 1
     else:
@@ -21,7 +27,7 @@ async def add_queuer_text(old_text: str, queuer_name: str, queuer_username: str)
         f"{number}. {queuer_name} (@{queuer_username})"
     )
 
-    return '\n'.join(lines)
+    return '\n'.join(lines), STATUS_OK
 
 
 async def delete_queuer_text(old_text: str, queuer_username: str) -> Tuple[str, int]:
