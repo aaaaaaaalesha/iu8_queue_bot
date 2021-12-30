@@ -26,15 +26,14 @@ async def start_handler(message: types.Message):
 
 
 async def sign_in_queue_handler(callback: types.CallbackQuery):
-    msg_id = callback.message.message_id
-    dt = datetime.now()
-    queuer_id = callback.from_user.id
     queuer_name = callback.from_user.first_name
     queuer_username = callback.from_user.username
 
-    status_code = await sql_add_queuer(msg_id, dt, queuer_id, queuer_name, queuer_username)
+    status_code = await sql_add_queuer(
+        callback.message.message_id, datetime.now(), callback.from_user.id, queuer_name, queuer_username
+    )
     if status_code == sqlite3.SQLITE_DENY:
-        await callback.answer(f"❕ {queuer_name} уже состоит в очереди.")
+        await callback.answer(f"❕ @{queuer_username} уже состоит в очереди.")
         return
     elif status_code != sqlite3.SQLITE_OK:
         await callback.answer("📛 Данная очередь больше не работает.")
@@ -46,15 +45,11 @@ async def sign_in_queue_handler(callback: types.CallbackQuery):
 
 
 async def sign_out_queue_handler(callback: types.CallbackQuery):
-    msg_id = callback.message.message_id
-    dt = datetime.now()
-    queuer_id = callback.from_user.id
-    queuer_name = callback.from_user.first_name
-    queuer_username = callback.from_user.username
+    status_code = await sql_delete_queuer(callback.message.message_id, callback.from_user.id)
 
-    status_code = await sql_delete_queuer(msg_id, queuer_id)
+    queuer_username = callback.from_user.username
     if status_code == sqlite3.SQLITE_DENY:
-        await callback.answer(f"❕ {queuer_name} ещё нет в очереди.")
+        await callback.answer(f"❕ @{queuer_username} ещё нет в очереди.")
         return
     elif status_code != sqlite3.SQLITE_OK:
         await callback.answer("📛 Данная очередь больше не работает.")
@@ -65,10 +60,35 @@ async def sign_out_queue_handler(callback: types.CallbackQuery):
     await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
 
 
+async def skip_ahead_handler(callback: types.CallbackQuery):
+    queuer_username = callback.from_user.username
+
+    new_text, status_code = await client_service.skip_ahead(callback.message.text, callback.from_user.username)
+
+    if status_code != client_service.STATUS_OK:
+        if status_code == client_service.STATUS_NO_QUEUERS:
+            await callback.answer("❕ В очереди ещё нет участников.")
+        if status_code == client_service.STATUS_ONE_QUEUER:
+            await callback.answer("❕ В очереди только один участник.")
+        if status_code == client_service.STATUS_NOT_QUEUER:
+            await callback.answer(f"❕ @{queuer_username} ещё не участник очереди.")
+        if status_code == client_service.STATUS_NO_AFTER:
+            await callback.answer("❕ Вы крайний в очереди.")
+        return
+
+    await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
+
+
+async def push_tail_handler(callback: types.CallbackQuery):
+    pass
+
+
 def register_client_handlers(dp: Dispatcher) -> None:
     """
     Function for registration all handlers for client.
     """
+    dp.register_message_handler(start_handler, commands=['start', 'help'], state=None)
     dp.register_callback_query_handler(sign_in_queue_handler, Text(startswith='sign_in'), state="*")
     dp.register_callback_query_handler(sign_out_queue_handler, Text(startswith='sign_out'), state="*")
-    dp.register_message_handler(start_handler, commands=['start', 'help'], state=None)
+    dp.register_callback_query_handler(skip_ahead_handler, Text(startswith='skip_ahead'), state="*")
+    dp.register_callback_query_handler(push_tail_handler, Text(startswith='in_tail'), state="*")

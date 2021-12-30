@@ -18,6 +18,6 @@ queue_inl_kb.row(
     InlineKeyboardButton(text='↩️ Покинуть очередь', callback_data='sign_out')
 )
 queue_inl_kb.add(
-    InlineKeyboardButton(text='🔃 Пропустить вперёд себя', callback_data='skip_ahead'),
+    InlineKeyboardButton(text='🔃 Пропустить вперёд', callback_data='skip_ahead'),
     InlineKeyboardButton(text='↪️ В хвост очереди', callback_data='in_tail')
 )
