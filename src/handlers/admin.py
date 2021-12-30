@@ -1,6 +1,6 @@
 # Copyright 2021 aaaaaaaalesha
 
-from datetime import datetime, timedelta, date
+from datetime import datetime
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
@@ -8,8 +8,8 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import InlineKeyboardMarkup
 
 from src.create_bot import dp, bot
-from src.db.sqlite_db import sql_get_queue_list, sql_add_queue, sql_add_admin, sql_delete_queue, sql_get_managed_chats, \
-    sql_get_chat_title
+from src.db.sqlite_db import sql_get_queue_list, sql_add_queue, sql_add_admin, \
+    sql_delete_queue, sql_get_managed_chats, sql_get_chat_title
 from src.keyboards import admin_kb, calendar_kb
 from src.keyboards.client_kb import PLAN_QUEUE_TEXT, DELETE_QUEUE_TEXT, PLANNED_QUEUES_TEXT
 from src.services.admin_service import EarlierException, parse_to_datetime, wait_for_queue_launch
@@ -44,7 +44,8 @@ async def queues_list_handler(msg: types.Message) -> tuple:
 
     out_str = str()
     for _, queue_name, dt, _, chat_title in found_queues:
-        out_str += f"📌«{queue_name}» в чате «{chat_title}» {datetime.strptime(dt, '%Y-%m-%d %H:%M:%S').strftime('%d.%m.%Y в %H:%M')}\n"
+        out_str += f"📌«{queue_name}» в чате «{chat_title}» " \
+                   f"{datetime.strptime(dt, '%Y-%m-%d %H:%M:%S').strftime('%d.%m.%Y в %H:%M')}\n"
 
     planned_msg = await bot.send_message(msg.from_user.id, f"⤵️ Вот запланированные вами очереди:\n{out_str}")
 
@@ -213,46 +214,46 @@ async def delete_queue_handler(callback: types.CallbackQuery, state: FSMContext)
     await state.finish()
 
 
-def register_admin_handlers(dp: Dispatcher) -> None:
+def register_admin_handlers(dp_: Dispatcher) -> None:
     """
     Function for registration all handlers for admin.
     :return: None
     """
-    dp.register_callback_query_handler(
+    dp_.register_callback_query_handler(
         cancel_handler, text="cancel_call", state="*"
     )
-    dp.register_message_handler(
+    dp_.register_message_handler(
         queues_list_handler, Text(equals='🗒 Список запланированных очередей'), state=None
     )
     # Plan queue.
-    dp.register_message_handler(
+    dp_.register_message_handler(
         queue_plan_handler, Text(equals='📌 Запланировать очередь'), state=None
     )
-    dp.register_message_handler(
+    dp_.register_message_handler(
         queue_plan_handler, commands='plan_queue', state=None
     )
-    dp.register_callback_query_handler(
+    dp_.register_callback_query_handler(
         queue_plan_inline_handler, text="plan_queue", state=None
     )
-    dp.register_callback_query_handler(
+    dp_.register_callback_query_handler(
         queue_set_chat_handler, Text(startswith='choose_chat_'), state=FSMPlanning.choose_chat
     )
-    dp.register_message_handler(
+    dp_.register_message_handler(
         set_queue_name_handler, content_types='text', state=FSMPlanning.queue_name
     )
-    dp.register_callback_query_handler(
+    dp_.register_callback_query_handler(
         set_date_handler, calendar_kb.calendar_callback.filter(), state=FSMPlanning.start_date
     )
-    dp.register_message_handler(
+    dp_.register_message_handler(
         set_datetime_handler, content_types='text', state=FSMPlanning.start_datetime
     )
     # Delete queue.
-    dp.register_message_handler(
+    dp_.register_message_handler(
         choose_queue_to_delete_handler, Text(equals='🗑 Удалить очередь'), state=None
     )
-    dp.register_message_handler(
+    dp_.register_message_handler(
         choose_queue_to_delete_handler, Text(equals='🗑 Удалить очередь'), commands='delete_queue', state=None
     )
-    dp.register_callback_query_handler(
+    dp_.register_callback_query_handler(
         delete_queue_handler, Text(startswith='delete_queue_'), state=FSMDeletion.queue_choice
     )

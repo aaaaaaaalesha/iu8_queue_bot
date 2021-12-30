@@ -3,7 +3,6 @@
 import calendar
 from datetime import datetime, timedelta
 
-from aiogram import md
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.callback_data import CallbackData
 from aiogram.types import CallbackQuery
@@ -21,6 +20,7 @@ class Calendar:
         Creates an inline keyboard with the provided year and month
         :param int year: Year to use in the calendar, if None the current year is used.
         :param int month: Month to use in the calendar, if None the current month is used.
+
         :return: Returns InlineKeyboardMarkup object with the calendar.
         """
         inline_kb = InlineKeyboardMarkup(row_width=7)

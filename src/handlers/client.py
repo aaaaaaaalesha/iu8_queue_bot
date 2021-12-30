@@ -1,6 +1,5 @@
 # Copyright 2021 aaaaaaaalesha
 import asyncio
-import sqlite3
 
 from aiogram import types, Dispatcher
 from aiogram.dispatcher.filters import Text
@@ -112,13 +111,13 @@ async def push_tail_handler(callback: types.CallbackQuery):
     await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
 
 
-def register_client_handlers(dp: Dispatcher) -> None:
+def register_client_handlers(dp_: Dispatcher) -> None:
     """
     Function registers all handlers for client.
     """
-    dp.register_message_handler(start_handler, commands=['start', 'help'], state=None)
-    dp.register_errors_handler(flood_handler, exception=RetryAfter)
-    dp.register_callback_query_handler(sign_in_queue_handler, Text(startswith='sign_in'), state="*")
-    dp.register_callback_query_handler(sign_out_queue_handler, Text(startswith='sign_out'), state="*")
-    dp.register_callback_query_handler(skip_ahead_handler, Text(startswith='skip_ahead'), state="*")
-    dp.register_callback_query_handler(push_tail_handler, Text(startswith='in_tail'), state="*")
+    dp_.register_message_handler(start_handler, commands=['start', 'help'], state=None)
+    dp_.register_errors_handler(flood_handler, exception=RetryAfter)
+    dp_.register_callback_query_handler(sign_in_queue_handler, Text(startswith='sign_in'), state="*")
+    dp_.register_callback_query_handler(sign_out_queue_handler, Text(startswith='sign_out'), state="*")
+    dp_.register_callback_query_handler(skip_ahead_handler, Text(startswith='skip_ahead'), state="*")
+    dp_.register_callback_query_handler(push_tail_handler, Text(startswith='in_tail'), state="*")
