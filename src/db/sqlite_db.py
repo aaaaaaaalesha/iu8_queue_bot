@@ -2,6 +2,7 @@
 
 import sqlite3
 from datetime import datetime
+from typing import Tuple
 
 conn = sqlite3.connect('queue_bot.db')
 cursor = conn.cursor()
@@ -95,11 +96,28 @@ async def sql_add_queue(admin_id_: int, queue_name_: str, start_dt: datetime, ch
     return cursor.fetchone()
 
 
-async def sql_delete_queue(id_: int) -> None:
+async def sql_delete_queue(id_: int) -> Tuple[int, int]:
+    cursor.execute(
+        "SELECT chat_id FROM queues_list WHERE id = ?", (id_,)
+    )
+    chat_id: tuple = cursor.fetchone()
+
     cursor.execute(
         "DELETE FROM queues_list WHERE id = ?", (id_,)
     )
     conn.commit()
+
+    cursor.execute(
+        "SELECT msg_id FROM queue WHERE id = ?", (id_,)
+    )
+    msg_id: tuple = cursor.fetchone()
+
+    cursor.execute(
+        "DELETE FROM queue WHERE id = ?", (id_,)
+    )
+    conn.commit()
+
+    return chat_id[0], msg_id[0]
 
 
 async def sql_post_queue_msg_id(queue_id_: int, msg_id_: int):

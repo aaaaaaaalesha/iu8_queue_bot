@@ -205,7 +205,8 @@ async def choose_queue_to_delete_handler(msg: types.Message) -> None:
 
 
 async def delete_queue_handler(callback: types.CallbackQuery, state: FSMContext):
-    await sql_delete_queue(int(callback.data[len("delete_queue_"):]))
+    chat_id, msg_id = await sql_delete_queue(int(callback.data[len("delete_queue_"):]))
+    await bot.delete_message(chat_id, msg_id)
     await callback.answer('💥 Очередь удалена')
     await messages_tuple[0].delete()
     await messages_tuple[1].delete()
