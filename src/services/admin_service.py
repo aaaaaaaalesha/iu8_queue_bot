@@ -3,6 +3,7 @@
 import sqlite3
 from datetime import datetime
 import asyncio
+from aiogram.utils.exceptions import BadRequest
 
 from src.create_bot import bot
 from src.db.sqlite_db import sql_get_queue_from_list, sql_post_queue_msg_id
@@ -28,7 +29,10 @@ async def wait_for_queue_launch(start_dt: datetime, chat_id: int, queue_id: int)
                                  f"",
                                  reply_markup=client_kb.queue_inl_kb
                                  )
-    msg.pin(disable_notification=False)
+    try:
+        await msg.pin(disable_notification=False)
+    except BadRequest:
+        pass
 
     await sql_post_queue_msg_id(queue_id, msg.message_id)
 
