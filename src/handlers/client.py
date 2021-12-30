@@ -4,7 +4,7 @@ import sqlite3
 
 from aiogram import types, Dispatcher
 from aiogram.dispatcher.filters import Text
-from datetime import datetime
+from aiogram.utils.exceptions import RetryAfter
 
 from src.create_bot import dp, bot
 from src.keyboards.client_kb import main_kb, queue_inl_kb
@@ -23,6 +23,10 @@ async def start_handler(message: types.Message):
                            f"@aaaaaaaalesha",
                            reply_markup=main_kb
                            )
+
+
+async def flood_handler(update: types.Update, exception: RetryAfter):
+    await update.message.answer(f"Не так быстро! Подождите {exception.timeout} секунд")
 
 
 async def sign_in_queue_handler(callback: types.CallbackQuery):
@@ -113,6 +117,7 @@ def register_client_handlers(dp: Dispatcher) -> None:
     Function registers all handlers for client.
     """
     dp.register_message_handler(start_handler, commands=['start', 'help'], state=None)
+    dp.register_errors_handler(flood_handler, exception=RetryAfter)
     dp.register_callback_query_handler(sign_in_queue_handler, Text(startswith='sign_in'), state="*")
     dp.register_callback_query_handler(sign_out_queue_handler, Text(startswith='sign_out'), state="*")
     dp.register_callback_query_handler(skip_ahead_handler, Text(startswith='skip_ahead'), state="*")
