@@ -3,11 +3,10 @@
 import sqlite3
 from datetime import datetime
 import asyncio
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from src.create_bot import bot
 from src.db.sqlite_db import sql_get_queue_from_list, sql_post_queue_msg_id
-from src.keyboards import admin_kb
+from src.keyboards import client_kb
 
 
 class EarlierException(Exception):
@@ -24,10 +23,10 @@ async def wait_for_queue_launch(start_dt: datetime, chat_id: int, queue_id: int)
         return
 
     msg = await bot.send_message(chat_id,
-                                 f" 🅀🅄🄴🅄🄴 \n"
+                                 f"🆕 🅀🅄🄴🅄🄴 🆕\n"
                                  f"Очередь «{queue_data[2]}» запущена!\n"
                                  f"",
-                                 reply_markup=admin_kb.queue_inl_kb
+                                 reply_markup=client_kb.queue_inl_kb
                                  )
 
     await sql_post_queue_msg_id(queue_id, msg.message_id)

@@ -95,6 +95,13 @@ async def sql_add_queue(admin_id_: int, queue_name_: str, start_dt: datetime, ch
     return cursor.fetchone()
 
 
+async def sql_delete_queue(id_: int) -> None:
+    cursor.execute(
+        "DELETE FROM queues_list WHERE id = ?", (id_,)
+    )
+    conn.commit()
+
+
 async def sql_post_queue_msg_id(queue_id_: int, msg_id_: int):
     cursor.execute(
         "INSERT INTO queue ('id', 'msg_id') VALUES (?, ?)", (queue_id_, msg_id_)
@@ -102,8 +109,37 @@ async def sql_post_queue_msg_id(queue_id_: int, msg_id_: int):
     conn.commit()
 
 
-async def sql_delete_queue(id_: int) -> None:
+async def sql_get_queue_id(msg_id_: int) -> tuple:
     cursor.execute(
-        "DELETE FROM queues_list WHERE id = ?", (id_,)
+        "SELECT id FROM queue WHERE msg_id = ?", (msg_id_,)
+    )
+
+    return cursor.fetchone()
+
+
+async def sql_get_queuer(queue_id_: int, queuer_id_: int) -> tuple:
+    cursor.execute(
+        "SELECT * FROM queue WHERE queuer_id = ? AND id = ?",
+        (queuer_id_, queue_id_)
+    )
+
+    return cursor.fetchone()
+
+
+async def sql_add_queuer(msg_id_: int, dt_: datetime, queuer_id_: int, queuer_name_: str, queuer_username_: str) -> int:
+    id_tuple = await sql_get_queue_id(msg_id_)
+    if not id_tuple:
+        return sqlite3.SQLITE_IGNORE
+
+    # Check, is there queuer already in queue.
+    queuer = await sql_get_queuer(id_tuple[0], queuer_id_)
+    if queuer:
+        return sqlite3.SQLITE_DENY
+
+    cursor.execute(
+        "INSERT INTO queue VALUES (?, ?, ?, ?, ?, ?)",
+        (id_tuple[0], msg_id_, dt_, queuer_id_, queuer_name_, queuer_username_)
     )
     conn.commit()
+
+    return sqlite3.SQLITE_OK
