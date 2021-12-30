@@ -143,3 +143,22 @@ async def sql_add_queuer(msg_id_: int, dt_: datetime, queuer_id_: int, queuer_na
     conn.commit()
 
     return sqlite3.SQLITE_OK
+
+
+async def sql_delete_queuer(msg_id_: int, queuer_id_: int) -> int:
+    id_tuple = await sql_get_queue_id(msg_id_)
+    if not id_tuple:
+        return sqlite3.SQLITE_IGNORE
+
+    # Check, is there queuer already in queue.
+    queuer = await sql_get_queuer(id_tuple[0], queuer_id_)
+    if not queuer:
+        return sqlite3.SQLITE_DENY
+
+    cursor.execute(
+        "DELETE FROM queue WHERE id = ? AND queuer_id = ?",
+        (id_tuple[0], queuer_id_)
+    )
+    conn.commit()
+
+    return sqlite3.SQLITE_OK

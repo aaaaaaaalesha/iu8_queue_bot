@@ -15,3 +15,28 @@ async def add_queuer_text(old_text: str, queuer_name: str, queuer_username: str)
     )
 
     return '\n'.join(lines)
+
+
+async def delete_queuer_text(old_text: str, queuer_username: str) -> str:
+    lines = old_text.split('\n')
+    if len(lines) == 2:
+        return old_text
+    else:
+        index_changer = -1
+        for i in range(len(lines)):
+            if lines[i].find(f"@{queuer_username}") != -1:
+                lines.pop(i)
+                index_changer = i
+                break
+
+        if index_changer == -1:
+            return old_text
+
+        # If queuer is last in queue.
+        if index_changer == len(lines):
+            return '\n'.join(lines)
+
+        for i in range(index_changer, len(lines)):
+            lines[i].replace(f"{i}. ", f"{i - 1}. ", 1)
+
+    return '\n'.join(lines)

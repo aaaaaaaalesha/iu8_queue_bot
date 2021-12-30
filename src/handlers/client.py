@@ -7,7 +7,7 @@ from datetime import datetime
 
 from src.create_bot import dp, bot
 from src.keyboards.client_kb import main_kb, queue_inl_kb
-from src.db.sqlite_db import sql_add_queuer
+from src.db.sqlite_db import sql_add_queuer, sql_delete_queuer
 from src.services import client_service
 
 
@@ -46,7 +46,23 @@ async def sign_in_queue_handler(callback: types.CallbackQuery):
 
 
 async def sign_out_queue_handler(callback: types.CallbackQuery):
-    pass
+    msg_id = callback.message.message_id
+    dt = datetime.now()
+    queuer_id = callback.from_user.id
+    queuer_name = callback.from_user.first_name
+    queuer_username = callback.from_user.username
+
+    status_code = await sql_delete_queuer(msg_id, queuer_id)
+    if status_code == sqlite3.SQLITE_DENY:
+        await callback.answer(f"❕ {queuer_name} ещё нет в очереди.")
+        return
+    elif status_code != sqlite3.SQLITE_OK:
+        await callback.answer("📛 Данная очередь больше не работает.")
+        return
+
+    new_text = await client_service.delete_queuer_text(callback.message.text, queuer_username)
+
+    await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
 
 
 def register_client_handlers(dp: Dispatcher) -> None:
@@ -54,4 +70,5 @@ def register_client_handlers(dp: Dispatcher) -> None:
     Function for registration all handlers for client.
     """
     dp.register_callback_query_handler(sign_in_queue_handler, Text(startswith='sign_in'), state="*")
+    dp.register_callback_query_handler(sign_out_queue_handler, Text(startswith='sign_out'), state="*")
     dp.register_message_handler(start_handler, commands=['start', 'help'], state=None)
