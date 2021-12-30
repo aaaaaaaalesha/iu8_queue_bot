@@ -28,12 +28,21 @@ def sql_get_queue_list(admin_id_: int) -> list:
     return cursor.fetchall()
 
 
-def sql_get_chat_title(chat_id_: int) -> list:
+async def sql_get_queue_from_list(id_: int) -> tuple:
+    cursor.execute(
+        "SELECT *  FROM queues_list WHERE id = ?",
+        (id_,)
+    )
+
+    return cursor.fetchone()
+
+
+def sql_get_chat_title(chat_id_: int) -> tuple:
     cursor.execute(
         "SELECT chat_title FROM chat WHERE chat_id = ?", (chat_id_,)
     )
 
-    return cursor.fetchall()
+    return cursor.fetchone()
 
 
 def sql_get_managed_chats(admin_id_: int) -> list:
@@ -71,10 +80,24 @@ async def sql_delete_managed_chat(chat_id_: int) -> None:
     conn.commit()
 
 
-async def sql_add_queue(admin_id_: int, queue_name_: str, start_dt: datetime, chat_id_: int, chat_title_: str) -> None:
+async def sql_add_queue(admin_id_: int, queue_name_: str, start_dt: datetime, chat_id_: int, chat_title_: str) -> tuple:
     cursor.execute(
         "INSERT INTO queues_list ('assignee_id', 'queue_name', 'start', 'chat_id', 'chat_title') "
         "VALUES (?, ?, ?, ?, ?)", (admin_id_, queue_name_, start_dt, chat_id_, chat_title_)
+    )
+    conn.commit()
+
+    cursor.execute(
+        "SELECT id FROM queues_list WHERE assignee_id = ? AND queue_name = ? AND chat_id = ?",
+        (admin_id_, queue_name_, chat_id_)
+    )
+
+    return cursor.fetchone()
+
+
+async def sql_post_queue_msg_id(queue_id_: int, msg_id_: int):
+    cursor.execute(
+        "INSERT INTO queue ('id', 'msg_id') VALUES (?, ?)", (queue_id_, msg_id_)
     )
     conn.commit()
 

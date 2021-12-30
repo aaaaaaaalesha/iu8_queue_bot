@@ -94,13 +94,13 @@ async def queue_plan_handler(msg: types.Message) -> None:
 async def queue_set_chat_handler(callback: types.CallbackQuery, state: FSMContext) -> None:
     async with state.proxy() as data:
         chat_id = int(callback.data[len("choose_chat_"):])
-        chat_titles_list = sql_get_chat_title(chat_id)
-        if not chat_titles_list:
+        chat_title = sql_get_chat_title(chat_id)
+        if not chat_title:
             await cancel_handler(callback, state)
             return
 
         data['chat_id'] = chat_id
-        data['chat_title'] = chat_titles_list[0][0]
+        data['chat_title'] = chat_title[0]
 
     await FSMPlanning.next()
 
@@ -162,7 +162,7 @@ async def set_datetime_handler(msg: types.Message, state: FSMContext) -> None:
     # Добавление собранных данных в бд.
     queue_name = data['queue_name']
     chat_id, chat_title = data['chat_id'], data['chat_title']
-    await sql_add_queue(msg.from_user.id, queue_name, start_datetime, chat_id, chat_title)
+    queue_id = await sql_add_queue(msg.from_user.id, queue_name, start_datetime, chat_id, chat_title)
 
     await bot.send_message(
         msg.from_user.id,
@@ -178,7 +178,7 @@ async def set_datetime_handler(msg: types.Message, state: FSMContext) -> None:
 
     await state.finish()
 
-    await wait_for_queue_launch(start_datetime, chat_id)
+    await wait_for_queue_launch(start_datetime, chat_id, queue_id[0])
 
 
 """ Deleting queue zone"""
