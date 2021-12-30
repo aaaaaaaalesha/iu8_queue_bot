@@ -15,8 +15,7 @@ async def add_queuer_text(old_text: str, queuer_name: str, queuer_username: str)
     if len(lines) == 2:
         number = 1
     else:
-        last_line = lines[-1]
-        number = int(last_line[:last_line.find('. ')]) + 1
+        number = len(lines) - 1
 
     lines.append(
         f"{number}. {queuer_name} (@{queuer_username})"

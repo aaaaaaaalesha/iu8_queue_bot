@@ -11,8 +11,6 @@ from src.keyboards.client_kb import main_kb, queue_inl_kb
 from src.db.sqlite_db import sql_add_queuer, sql_delete_queuer
 from src.services import client_service
 
-TIMEOUT = 2.0
-
 
 async def start_handler(message: types.Message):
     """
@@ -44,7 +42,7 @@ async def sign_in_queue_handler(callback: types.CallbackQuery):
 
     new_text = await client_service.add_queuer_text(callback.message.text, queuer_name, queuer_username)
 
-    await asyncio.wait_for(callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb), TIMEOUT)
+    await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
 
 
 async def sign_out_queue_handler(callback: types.CallbackQuery):
@@ -60,7 +58,7 @@ async def sign_out_queue_handler(callback: types.CallbackQuery):
 
     new_text = await client_service.delete_queuer_text(callback.message.text, queuer_username)
 
-    await asyncio.wait_for(callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb), TIMEOUT)
+    await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
 
 
 async def skip_ahead_handler(callback: types.CallbackQuery):
@@ -80,7 +78,7 @@ async def skip_ahead_handler(callback: types.CallbackQuery):
             await callback.answer("❕ Вы крайний в очереди.")
             return
 
-    await asyncio.wait_for(callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb), TIMEOUT)
+    await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
 
 
 async def push_tail_handler(callback: types.CallbackQuery):
@@ -100,7 +98,7 @@ async def push_tail_handler(callback: types.CallbackQuery):
             await callback.answer("❕ Вы крайний в очереди.")
             return
 
-    await asyncio.wait_for(callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb), TIMEOUT)
+    await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
 
 
 def register_client_handlers(dp: Dispatcher) -> None:
