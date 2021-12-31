@@ -17,7 +17,9 @@
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
 ![GitHub Actions](https://img.shields.io/badge/githubactions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white)
+
 ---
+
 ## Телеграм-бот для создания очередей в групповых чатах.
 
 Этот бот поможет запланировать очередь на определённую дату и время, своевременно запустить её.
