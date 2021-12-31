@@ -225,6 +225,9 @@ def register_admin_handlers(dp_: Dispatcher) -> None:
     dp_.register_message_handler(
         queues_list_handler, Text(equals='🗒 Список запланированных очередей'), state=None
     )
+    dp_.register_message_handler(
+        queues_list_handler, commands="queues_list", state=None
+    )
     # Plan queue.
     dp_.register_message_handler(
         queue_plan_handler, Text(equals='📌 Запланировать очередь'), state=None

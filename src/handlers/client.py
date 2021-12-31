@@ -12,16 +12,31 @@ from src.services import client_service
 
 async def start_handler(message: types.Message):
     """
-    Handler for `/start` or `/help` command.
+    Handler for `/start` command.
     """
     await bot.send_message(message.from_user.id,
                            f"Привет, {message.from_user.first_name} (@{message.from_user.username})!\n"
                            f"Я IU8-QueueBot - бот для создания очередей.\n"
-                           f"Давайте начнём: можете использовать команды "
+                           f"Давайте начнём: можете использовать команды (/help ) "
                            f"или кнопки клавиатуры для работы со мной. В случае возникновения проблем, пишите "
                            f"@aaaaaaaalesha",
                            reply_markup=main_kb
                            )
+
+
+async def help_handler(message: types.Message):
+    """
+    Handler for `/help` command.
+    """
+    await bot.send_message(
+        message.from_user.id,
+        "/start - Начало работы с ботом \n"
+        "/help - Вывести доступные команды\n"
+        "/plan_queue - Запланировать очередь\n"
+        "/queues_list - Вывести список запланированных очередей\n"
+        "/delete_queue - Удалить запланированную очередь",
+        reply_markup=main_kb
+    )
 
 
 async def flood_handler(update: types.Update, exception: RetryAfter):
@@ -115,7 +130,8 @@ def register_client_handlers(dp_: Dispatcher) -> None:
     """
     Function registers all handlers for client.
     """
-    dp_.register_message_handler(start_handler, commands=['start', 'help'], state=None)
+    dp_.register_message_handler(start_handler, commands='start', state=None)
+    dp_.register_message_handler(help_handler, commands="help", state=None)
     dp_.register_errors_handler(flood_handler, exception=RetryAfter)
     dp_.register_callback_query_handler(sign_in_queue_handler, Text(startswith='sign_in'), state="*")
     dp_.register_callback_query_handler(sign_out_queue_handler, Text(startswith='sign_out'), state="*")
