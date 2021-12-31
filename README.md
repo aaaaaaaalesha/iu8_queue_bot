@@ -15,7 +15,7 @@
 
 [comment]: <> (Contacts)
 [![Mail Badge](https://img.shields.io/badge/-sks2311211@mail.ru-c14438?style=flat&logo=Gmail&logoColor=white&link=mailto:sks2311211@mail.ru)](mailto:sks2311211@mail.ru)
-<img alt="aaaaaaaalesha" src="https://img.shields.io/badge/aaaaaaaalesha-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white"/>
+[![Telegram](https://img.shields.io/badge/aaaaaaaalesha-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)]()
 
 [comment]: <> (Tech Stack)
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
