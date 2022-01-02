@@ -10,17 +10,16 @@
     <img alt="Deployment" src="https://img.shields.io/github/deployments/aaaaaaaalesha/iu8_queue_bot/iu8-queue-bot?style=plastic">
   </a>
   <a href="https://www.npmjs.com/package/readme-md-generator">
-    <img alt="Build Status" src="https://github.com/aaaaaaaalesha/iu8_queue_bot/actions/workflows/main.yml/badge.svg" />
+    <img alt="Build Status" src="https://github.com/aaaaaaaalesha/iu8_queue_bot/actions/workflows/main.yml/badge.svg">
   </a>
   <a href="https://www.codefactor.io/repository/github/aaaaaaaalesha/iu8_queue_bot/overview/main">
-    <img alt="CodeFactor" src="https://www.codefactor.io/repository/github/aaaaaaaalesha/iu8_queue_bot/badge/main?style=plastic" />
+    <img alt="CodeFactor" src="https://www.codefactor.io/repository/github/aaaaaaaalesha/iu8_queue_bot/badge/main?style=plastic">
   </a>
   <a href="https://img.shields.io/github/languages/code-size/aaaaaaaalesha/iu8_queue_bot?style=plastic">
     <img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/aaaaaaaalesha/iu8_queue_bot?style=plastic">
   </a>
-  <a href="mailto:sks2311211@mail.ru">
-    <img alt="Stars" src="https://img.shields.io/github/stars/aaaaaaaalesha/iu8_queue_bot?style=plastic
-" />
+  <a href="https://img.shields.io/github/stars/aaaaaaaalesha/iu8_queue_bot?style=plastic">
+    <img alt="Stars" src="https://img.shields.io/github/stars/aaaaaaaalesha/iu8_queue_bot?style=plastic" />
   </a>
   <a href="https://img.shields.io/github/watchers/aaaaaaaalesha/iu8_queue_bot?style=plastic">
     <img alt="GitHubWatchers" src="https://img.shields.io/github/watchers/aaaaaaaalesha/iu8_queue_bot?style=plastic">
@@ -44,8 +43,9 @@
 
 ## Телеграм-бот для создания очередей в групповых чатах
 
-Этот бот поможет запланировать очередь на определённую дату и время, своевременно запустить её. 
-Попробуйте [@iu8_queue_bot](https://t.me/iu8_queue_bot) сами, а если возникли вопросы, смотрите, как пользоваться ботом, ниже.
+Этот бот поможет запланировать очередь на определённую дату и время, своевременно запустить её.
+Попробуйте [@iu8_queue_bot](https://t.me/iu8_queue_bot) сами, а если возникли вопросы, смотрите, как пользоваться ботом,
+ниже.
 
 ## Как пользоваться?
 
