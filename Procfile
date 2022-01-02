@@ -1,0 +1,1 @@
+bot: python src/main.p
