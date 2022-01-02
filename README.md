@@ -32,11 +32,9 @@
 
 [comment]: <> (How to use bot)
 <p align="center">
-<img alt="queue_bot" src="https://raw.githubusercontent.com/aaaaaaaalesha/iu8_queue_bot/gh-actions/assets/how_to_use.gif"/>
+<img alt="queue_bot" src="https://raw.githubusercontent.com/aaaaaaaalesha/iu8_queue_bot/main/assets/how_to_use.gif"/>
 </p>
 
 ## Author
-
-***
 
 #### Copyright © 2021, [Alexey Alexandrov](https://github.com/aaaaaaaalesha)
