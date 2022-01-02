@@ -10,6 +10,7 @@ cursor = conn.cursor()
 
 def start_db() -> None:
     sql_script: str
+    # /app/src/ for Heroku
     with open('/app/src/db/init_db.sql', 'r') as sql_file:
         sql_script = sql_file.read()
 
