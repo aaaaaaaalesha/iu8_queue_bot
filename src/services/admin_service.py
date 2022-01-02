@@ -1,6 +1,7 @@
 # Copyright 2021 aaaaaaaalesha
 
-from datetime import datetime
+from datetime import datetime, timedelta
+from pytz import timezone
 import asyncio
 from aiogram.utils.exceptions import BadRequest
 
@@ -14,7 +15,7 @@ class EarlierException(Exception):
 
 
 async def wait_for_queue_launch(start_dt: datetime, chat_id: int, queue_id: int) -> None:
-    await asyncio.sleep((start_dt - datetime.now()).seconds)
+    await asyncio.sleep((start_dt - datetime.now(timezone('Europe/Moscow'))).seconds)
     # Check that queue has not been deleted.
     queue_data = await sql_get_queue_from_list(queue_id)
     if not queue_data:
@@ -37,11 +38,11 @@ async def wait_for_queue_launch(start_dt: datetime, chat_id: int, queue_id: int)
 
 
 def parse_to_datetime(date: datetime, text: str) -> datetime:
-    dt_now = datetime.now()
+    dt_now = datetime.now(timezone('Europe/Moscow'))
     h, m = tuple(map(int, text.split(':')))
 
     resulted_date = date
-    if resulted_date.replace(hour=h, minute=m, second=0, tzinfo=dt_now.tzinfo) < datetime.now():
+    if resulted_date.replace(hour=h, minute=m, second=0) < dt_now:
         raise EarlierException(f"❌ Введённое время раньше текущего!\nСейчас {dt_now.strftime('%H:%M')}")
 
     return date.replace(hour=h, minute=m, second=0, tzinfo=dt_now.tzinfo)

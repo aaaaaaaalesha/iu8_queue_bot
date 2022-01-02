@@ -2,6 +2,7 @@
 
 import calendar
 from datetime import datetime, timedelta
+from pytz import timezone
 
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.callback_data import CallbackData
@@ -14,8 +15,8 @@ calendar_callback = CallbackData('simple_calendar', 'act', 'year', 'month', 'day
 class Calendar:
     """Calendar inline keyboard."""
 
-    async def start_calendar(self, year: int = datetime.now().year,
-                             month: int = datetime.now().month) -> InlineKeyboardMarkup:
+    async def start_calendar(self, year: int = datetime.now(timezone('Europe/Moscow')).year,
+                             month: int = datetime.now(timezone('Europe/Moscow')).month) -> InlineKeyboardMarkup:
         """
         Creates an inline keyboard with the provided year and month
         :param int year: Year to use in the calendar, if None the current year is used.
@@ -54,8 +55,8 @@ class Calendar:
                     inline_kb.insert(InlineKeyboardButton(" ", callback_data=ignore_callback))
                     continue
                 # Cross out the irrelevant dates.
-                dt_now = datetime.now()
-                if dt_now > datetime(year, month, day) and day != dt_now.day:
+                dt_now = datetime.now(timezone('Europe/Moscow'))
+                if dt_now > datetime(year, month, day, tzinfo=timezone('Europe/Moscow')) and day != dt_now.day:
                     inline_kb.insert(InlineKeyboardButton(
                         self.__strike_through(day), callback_data=ignore_callback
                     ))
@@ -96,7 +97,7 @@ class Calendar:
                     and returning the date if so.
         """
         return_data = (False, None)
-        temp_date = datetime(int(data['year']), int(data['month']), 1)
+        temp_date = datetime(int(data['year']), int(data['month']), 1, tzinfo=timezone('Europe/Moscow'))
 
         # Processing empty buttons, answering with no action.
         if data['act'] == "IGNORE":
@@ -104,7 +105,8 @@ class Calendar:
         # User picked a day button, return date.
         if data['act'] == "DAY":
             await query.message.delete_reply_markup()  # removing inline keyboard
-            return_data = True, datetime(int(data['year']), int(data['month']), int(data['day']))
+            return_data = True, datetime(int(data['year']), int(data['month']), int(data['day']),
+                                         tzinfo=timezone('Europe/Moscow'))
         # User navigates to previous year, editing message with new calendar.
         if data['act'] == "PREV-YEAR":
             prev_date = temp_date - timedelta(days=365)
