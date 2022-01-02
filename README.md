@@ -2,6 +2,9 @@
 
 [comment]: <> (Badges)
 <p align="center">
+  <a href="mailto:sks2311211@mail.ru">
+    <img alt="build status" src="https://img.shields.io/badge/-sks2311211@mail.ru-c14438?style=flat&logo=Gmail&logoColor=white&link=mailto:sks2311211@mail.ru" />
+  </a>
   <a href="https://www.npmjs.com/package/readme-md-generator">
     <img alt="build status" src="https://github.com/aaaaaaaalesha/iu8_queue_bot/actions/workflows/main.yml/badge.svg" />
   </a>
@@ -13,11 +16,8 @@
 <img alt="queue_bot" height="150" width="150" src="https://user-images.githubusercontent.com/55093100/147390446-d783063a-e68e-4caa-9711-731c13a9fd2d.png"/>
 </p>
 
-[comment]: <> (Contacts)
-[![Mail Badge](https://img.shields.io/badge/-sks2311211@mail.ru-c14438?style=flat&logo=Gmail&logoColor=white&link=mailto:sks2311211@mail.ru)](mailto:sks2311211@mail.ru)
+[comment]: <> (Techs)
 [![Telegram](https://img.shields.io/badge/aaaaaaaalesha-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)]()
-
-[comment]: <> (Tech Stack)
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
 ![GitHub Actions](https://img.shields.io/badge/githubactions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -35,7 +35,7 @@
 <img alt="queue_bot" src="https://raw.githubusercontent.com/aaaaaaaalesha/iu8_queue_bot/gh-actions/assets/how_to_use.gif"/>
 </p>
 
-### Author
+## Author
 
 ***
 
