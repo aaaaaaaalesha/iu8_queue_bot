@@ -10,7 +10,7 @@ cursor = conn.cursor()
 
 def start_db() -> None:
     sql_script: str
-    with open('db/init_db.sql', 'r') as sql_file:
+    with open('/app/src/db/init_db.sql', 'r') as sql_file:
         sql_script = sql_file.read()
 
     cursor.executescript(sql_script)
