@@ -9,6 +9,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+.idea
 develop-eggs/
 dist/
 downloads/
@@ -60,6 +61,7 @@ coverage.xml
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+src/queue_bot.db
 
 # Flask stuff:
 instance/
@@ -76,6 +78,7 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+sandbox.ipynb
 
 # IPython
 profile_default/
@@ -109,6 +112,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
 
 # Spyder project settings
 .spyderproject
