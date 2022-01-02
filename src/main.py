@@ -1,5 +1,4 @@
-# Copyright 2021 aaaaaaaalesha
-
+# Copyright 2022 aaaaaaaalesha
 
 from aiogram import executor
 

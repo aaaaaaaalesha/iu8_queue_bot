@@ -17,7 +17,7 @@ async def start_handler(message: types.Message):
     await bot.send_message(message.from_user.id,
                            f"Привет, {message.from_user.first_name} (@{message.from_user.username})!\n"
                            f"Я IU8-QueueBot - бот для создания очередей.\n"
-                           f"Давайте начнём: можете использовать команды (/help ) "
+                           f"Давайте начнём: можете использовать команды (/help) "
                            f"или кнопки клавиатуры для работы со мной. В случае возникновения проблем, пишите "
                            f"@aaaaaaaalesha",
                            reply_markup=main_kb
