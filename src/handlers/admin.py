@@ -45,7 +45,7 @@ async def queues_list_handler(msg: types.Message) -> tuple:
     out_str = str()
     for _, queue_name, dt, _, chat_title in found_queues:
         out_str += f"📌«{queue_name}» в чате «{chat_title}» " \
-                   f"{datetime.strptime(dt, '%Y-%m-%d %H:%M').strftime('%d.%m.%Y в %H:%M')}\n"
+                   f"{datetime.strptime(dt, '%Y-%m-%d %H:%M:%S %Z').strftime('%d.%m.%Y в %H:%M (%Z)')}\n"
 
     planned_msg = await bot.send_message(msg.from_user.id, f"⤵️ Вот запланированные вами очереди:\n{out_str}")
 
