@@ -10,7 +10,7 @@
     <img alt="Deployment" src="https://img.shields.io/github/deployments/aaaaaaaalesha/iu8_queue_bot/iu8-queue-bot?style=plastic">
   </a>
   <a href="https://www.npmjs.com/package/readme-md-generator">
-    <img alt="Build Status" src="https://github.com/aaaaaaaalesha/iu8_queue_bot/actions/workflows/main.yml/badge.svg">
+    <img alt="Build Status" src="https://github.com/aaaaaaaalesha/iu8_queue_bot/actions/workflows/main.yaml/badge.svg">
   </a>
   <a href="https://www.codefactor.io/repository/github/aaaaaaaalesha/iu8_queue_bot/overview/main">
     <img alt="CodeFactor" src="https://www.codefactor.io/repository/github/aaaaaaaalesha/iu8_queue_bot/badge/main?style=plastic">
