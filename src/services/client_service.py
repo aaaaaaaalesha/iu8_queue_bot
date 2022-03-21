@@ -2,6 +2,8 @@
 
 from typing import Tuple
 
+from aiogram import types
+
 STATUS_OK = 0
 STATUS_ALREADY_IN = 1
 STATUS_NO_QUEUERS = 2
@@ -10,7 +12,19 @@ STATUS_NOT_QUEUER = 4
 STATUS_NO_AFTER = 5
 
 
+async def add_queuers_text(queue_):
+    cb: types.CallbackQuery = queue_.pop()
+    # cb.message.
+
+
 async def add_queuer_text(old_text: str, queuer_name: str, queuer_username: str) -> Tuple[str, int]:
+    """
+    Changes old_text, adding here a new queuer name.
+    @param old_text: str repr of old message;
+    @param queuer_name: new queuer name;
+    @param queuer_username: new queuer username;
+    @return: tuple with new message text and code status.
+    """
     lines = old_text.split('\n')
     number: int
 

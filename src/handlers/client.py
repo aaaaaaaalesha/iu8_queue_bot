@@ -10,9 +10,41 @@ from src.keyboards.client_kb import main_kb, queue_inl_kb
 from src.services import client_service
 
 
-async def start_handler(message: types.Message):
+class UserQueue:
+    """Implements a simple queue for users."""
+
+    def __init__(self, max_size=10):
+        self.__queue = asyncio.Queue()
+        self.__current_msg_text = str()
+        self.__capacity = max_size
+        self.__size = 0
+
+    async def push(self, callback: types.CallbackQuery) -> None:
+        await self.__queue.put(item=callback)
+        self.__size += 1
+
+    async def pop(self) -> types.CallbackQuery:
+        cb = await self.__queue.get()
+        return cb
+
+    async def full(self) -> bool:
+        return self.__size >= self.__capacity
+
+    async def update_msg_text(self, msg_text: str) -> None:
+        self.__current_msg_text = msg_text
+
+
+queue = UserQueue()
+while queue.full():
+    await client_service.add_queuers_text(queue)
+    await asyncio.sleep(2)
+
+
+async def start_handler(message: types.Message) -> None:
     """
     Handler for `/start` command.
+    @param message: message object;
+    @return: None
     """
     await bot.send_message(message.from_user.id,
                            f"Привет, {message.from_user.first_name} (@{message.from_user.username})!\n"
@@ -39,22 +71,21 @@ async def help_handler(message: types.Message):
     )
 
 
-async def flood_handler(update: types.Update, exception: RetryAfter):
+async def flood_handler(update: types.Update, exception: RetryAfter) -> None:
     await update.message.answer(f"Не так быстро! Подождите {exception.timeout} секунд")
 
 
 async def sign_in_queue_handler(callback: types.CallbackQuery):
-    queuer_name = callback.from_user.first_name
-    queuer_username = callback.from_user.username
+    await queue.push(callback)
 
-    done, _ = await asyncio.wait((client_service.add_queuer_text(callback.message.text, queuer_name, queuer_username),))
-    for future in done:
-        new_text, status_code = future.result()
-        if status_code != client_service.STATUS_OK:
-            if status_code == client_service.STATUS_ALREADY_IN:
-                await callback.answer(f"❕ Вы уже в очереди.")
-                return
-        await asyncio.wait((callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb),))
+    # done, _ = await asyncio.wait((client_service.add_queuer_text(callback.message.text, queuer_name, queuer_username),))
+    # for future in done:
+    #     new_text, status_code = future.result()
+    #     if status_code != client_service.STATUS_OK:
+    #         if status_code == client_service.STATUS_ALREADY_IN:
+    #             await callback.answer(f"❕ Вы уже в очереди.")
+    #             return
+    #     await asyncio.wait((callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb),))
 
 
 async def sign_out_queue_handler(callback: types.CallbackQuery):
