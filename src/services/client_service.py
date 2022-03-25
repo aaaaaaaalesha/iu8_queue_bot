@@ -2,7 +2,10 @@
 
 from typing import Tuple
 
+import aiogram
 from aiogram import types
+
+from src.keyboards.client_kb import queue_inl_kb
 
 STATUS_OK = 0
 STATUS_ALREADY_IN = 1
@@ -13,8 +16,28 @@ STATUS_NO_AFTER = 5
 
 
 async def add_queuers_text(queue_):
-    cb: types.CallbackQuery = queue_.pop()
-    # cb.message.
+    callback: types.CallbackQuery = await queue_.pop()
+    msg_lines = callback.message.text.split()
+
+    await add_queuer(msg_lines, callback)
+    while queue_:
+        callback = await queue_.pop()
+        await add_queuer(msg_lines, callback)
+
+    new_text = '\n'.join(msg_lines)
+    await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
+
+
+async def add_queuer(msg_lines_: list, callback: types.CallbackQuery) -> None:
+    user = callback.from_user
+    match_str = f"{user.first_name} (@{user.username})"
+
+    for i in range(2, len(msg_lines_)):
+        if msg_lines_[i].rfind(match_str) != -1:
+            await callback.answer("❕ Вы уже в очереди.")
+            return
+
+    msg_lines_.append(f"{len(msg_lines_) - 1}. {match_str}")
 
 
 async def add_queuer_text(old_text: str, queuer_name: str, queuer_username: str) -> Tuple[str, int]:
@@ -26,19 +49,13 @@ async def add_queuer_text(old_text: str, queuer_name: str, queuer_username: str)
     @return: tuple with new message text and code status.
     """
     lines = old_text.split('\n')
-    number: int
 
     for i in range(2, len(lines)):
-        if lines[i].find(f"@{queuer_username}") != -1:
+        if lines[i].rfind(f"{queuer_name} @{queuer_username}") != -1:
             return str(), STATUS_ALREADY_IN
 
-    if len(lines) == 2:
-        number = 1
-    else:
-        number = len(lines) - 1
-
     lines.append(
-        f"{number}. {queuer_name} (@{queuer_username})"
+        f"{len(lines) - 1}. {queuer_name} (@{queuer_username})"
     )
 
     return '\n'.join(lines), STATUS_OK

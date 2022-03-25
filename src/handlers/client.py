@@ -5,39 +5,17 @@ from aiogram import types, Dispatcher
 from aiogram.dispatcher.filters import Text
 from aiogram.utils.exceptions import RetryAfter
 
-from src.create_bot import dp, bot
+from src.create_bot import dp, bot, queue, UserQueue
 from src.keyboards.client_kb import main_kb, queue_inl_kb
 from src.services import client_service
 
 
-class UserQueue:
-    """Implements a simple queue for users."""
-
-    def __init__(self, max_size=10):
-        self.__queue = asyncio.Queue()
-        self.__current_msg_text = str()
-        self.__capacity = max_size
-        self.__size = 0
-
-    async def push(self, callback: types.CallbackQuery) -> None:
-        await self.__queue.put(item=callback)
-        self.__size += 1
-
-    async def pop(self) -> types.CallbackQuery:
-        cb = await self.__queue.get()
-        return cb
-
-    async def full(self) -> bool:
-        return self.__size >= self.__capacity
-
-    async def update_msg_text(self, msg_text: str) -> None:
-        self.__current_msg_text = msg_text
-
-
-queue = UserQueue()
-while queue.full():
-    await client_service.add_queuers_text(queue)
-    await asyncio.sleep(2)
+async def queue_loop_worker(queue_: UserQueue):
+    while True:
+        if queue_:
+            await client_service.add_queuers_text(queue_)
+        await asyncio.sleep(2.)
+        # TODO: throw this away
 
 
 async def start_handler(message: types.Message) -> None:
@@ -71,12 +49,22 @@ async def help_handler(message: types.Message):
     )
 
 
+# FLOOD FIGHTER
+
+async def anti_flood(*args, **kwargs):
+    cb = args[0]
+    await cb.answer("Не так быстро!")
+
+
 async def flood_handler(update: types.Update, exception: RetryAfter) -> None:
     await update.message.answer(f"Не так быстро! Подождите {exception.timeout} секунд")
 
 
+# END FLOOD FIGHTER
+
+@dp.throttled(anti_flood(), rate=2)
 async def sign_in_queue_handler(callback: types.CallbackQuery):
-    await queue.push(callback)
+    await queue.push(callback)  # O(1)
 
     # done, _ = await asyncio.wait((client_service.add_queuer_text(callback.message.text, queuer_name, queuer_username),))
     # for future in done:
@@ -88,6 +76,7 @@ async def sign_in_queue_handler(callback: types.CallbackQuery):
     #     await asyncio.wait((callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb),))
 
 
+@dp.throttled(anti_flood(), rate=2)
 async def sign_out_queue_handler(callback: types.CallbackQuery):
     done, _ = await asyncio.wait(
         (client_service.delete_queuer_text(callback.message.text, callback.from_user.username),))
@@ -105,6 +94,7 @@ async def sign_out_queue_handler(callback: types.CallbackQuery):
         await asyncio.wait((callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb),))
 
 
+@dp.throttled(anti_flood(), rate=2)
 async def skip_ahead_handler(callback: types.CallbackQuery):
     new_text, status_code = str(), -1
     done, _ = await asyncio.wait((client_service.skip_ahead(callback.message.text, callback.from_user.username),))
@@ -131,6 +121,7 @@ async def skip_ahead_handler(callback: types.CallbackQuery):
     await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
 
 
+@dp.throttled(anti_flood(), rate=2)
 async def push_tail_handler(callback: types.CallbackQuery):
     new_text, status_code = str(), -1
     done, _ = await asyncio.wait((client_service.push_tail(callback.message.text, callback.from_user.username),))
