@@ -17,7 +17,7 @@ async def start_handler(message: types.Message):
     await bot.send_message(message.from_user.id,
                            f"Привет, {message.from_user.first_name} (@{message.from_user.username})!\n"
                            f"Я IU8-QueueBot - бот для создания очередей.\n"
-                           f"Давайте начнём: можете использовать команды (/help) "
+                           "Давайте начнём: можете использовать команды (/help) "
                            f"или кнопки клавиатуры для работы со мной. В случае возникновения проблем, пишите "
                            f"@aaaaaaaalesha",
                            reply_markup=main_kb
@@ -44,22 +44,24 @@ async def flood_handler(update: types.Update, exception: RetryAfter):
 
 
 async def sign_in_queue_handler(callback: types.CallbackQuery):
-    queuer_name = callback.from_user.first_name
-    queuer_username = callback.from_user.username
-
-    done, _ = await asyncio.wait((client_service.add_queuer_text(callback.message.text, queuer_name, queuer_username),))
+    user = callback.from_user
+    done, _ = await asyncio.wait(
+        (client_service.add_queuer_text(callback.message.text, user.first_name, user.username),)
+    )
     for future in done:
         new_text, status_code = future.result()
         if status_code != client_service.STATUS_OK:
             if status_code == client_service.STATUS_ALREADY_IN:
-                await callback.answer(f"❕ Вы уже в очереди.")
+                await callback.answer("❕ Вы уже в очереди.")
                 return
         await asyncio.wait((callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb),))
 
 
 async def sign_out_queue_handler(callback: types.CallbackQuery):
+    user = callback.from_user
     done, _ = await asyncio.wait(
-        (client_service.delete_queuer_text(callback.message.text, callback.from_user.username),))
+        (client_service.delete_queuer_text(callback.message.text, user.first_name, user.username),)
+    )
 
     for future in done:
         new_text, status_code = future.result()
@@ -76,7 +78,11 @@ async def sign_out_queue_handler(callback: types.CallbackQuery):
 
 async def skip_ahead_handler(callback: types.CallbackQuery):
     new_text, status_code = str(), -1
-    done, _ = await asyncio.wait((client_service.skip_ahead(callback.message.text, callback.from_user.username),))
+
+    user = callback.from_user
+    done, _ = await asyncio.wait(
+        (client_service.skip_ahead(callback.message.text, user.first_name, user.username),)
+    )
 
     for future in done:
         new_text, status_code = future.result()
@@ -89,7 +95,7 @@ async def skip_ahead_handler(callback: types.CallbackQuery):
             await callback.answer("❕ В очереди только один участник.")
             return
         if status_code == client_service.STATUS_NOT_QUEUER:
-            await callback.answer(f"❕ Вы ещё не участник очереди.")
+            await callback.answer("❕ Вы ещё не участник очереди.")
             return
         if status_code == client_service.STATUS_NO_AFTER:
             await callback.answer("❕ Вы крайний в очереди.")
@@ -102,7 +108,11 @@ async def skip_ahead_handler(callback: types.CallbackQuery):
 
 async def push_tail_handler(callback: types.CallbackQuery):
     new_text, status_code = str(), -1
-    done, _ = await asyncio.wait((client_service.push_tail(callback.message.text, callback.from_user.username),))
+
+    user = callback.from_user
+    done, _ = await asyncio.wait(
+        (client_service.push_tail(callback.message.text, user.first_name, user.username),)
+    )
 
     for future in done:
         new_text, status_code = future.result()
@@ -115,7 +125,7 @@ async def push_tail_handler(callback: types.CallbackQuery):
             await callback.answer("❕ В очереди только один участник.")
             return
         if status_code == client_service.STATUS_NOT_QUEUER:
-            await callback.answer(f"❕ Вы ещё не участник очереди.")
+            await callback.answer("❕ Вы ещё не участник очереди.")
             return
         if status_code == client_service.STATUS_NO_AFTER:
             await callback.answer("❕ Вы крайний в очереди.")
