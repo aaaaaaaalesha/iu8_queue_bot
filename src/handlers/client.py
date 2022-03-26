@@ -1,7 +1,7 @@
 # Copyright 2021 aaaaaaaalesha
 import asyncio
 
-from aiogram import types, Dispatcher
+from aiogram import types, exceptions, Dispatcher
 from aiogram.dispatcher.filters import Text
 from aiogram.utils.exceptions import RetryAfter
 
@@ -10,12 +10,9 @@ from src.keyboards.client_kb import main_kb, queue_inl_kb
 from src.services import client_service
 
 
-async def queue_loop_worker(queue_: UserQueue):
-    while True:
-        if queue_:
-            await client_service.add_queuers_text(queue_)
-        await asyncio.sleep(2.)
-        # TODO: throw this away
+async def queue_worker(queue_: UserQueue):
+    if queue_:
+        await client_service.add_queuers_text(queue_)
 
 
 async def start_handler(message: types.Message) -> None:
@@ -49,37 +46,19 @@ async def help_handler(message: types.Message):
     )
 
 
-# FLOOD FIGHTER
-
-async def anti_flood(*args, **kwargs):
-    cb = args[0]
-    await cb.answer("Не так быстро!")
-
-
 async def flood_handler(update: types.Update, exception: RetryAfter) -> None:
     await update.message.answer(f"Не так быстро! Подождите {exception.timeout} секунд")
 
 
-# END FLOOD FIGHTER
-
-@dp.throttled(anti_flood(), rate=2)
 async def sign_in_queue_handler(callback: types.CallbackQuery):
     await queue.push(callback)  # O(1)
-
-    # done, _ = await asyncio.wait((client_service.add_queuer_text(callback.message.text, queuer_name, queuer_username),))
-    # for future in done:
-    #     new_text, status_code = future.result()
-    #     if status_code != client_service.STATUS_OK:
-    #         if status_code == client_service.STATUS_ALREADY_IN:
-    #             await callback.answer(f"❕ Вы уже в очереди.")
-    #             return
-    #     await asyncio.wait((callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb),))
+    await queue_worker(queue)
 
 
-@dp.throttled(anti_flood(), rate=2)
 async def sign_out_queue_handler(callback: types.CallbackQuery):
+    user = callback.from_user
     done, _ = await asyncio.wait(
-        (client_service.delete_queuer_text(callback.message.text, callback.from_user.username),))
+        (client_service.delete_queuer_text(callback.message.text, user.first_name, user.username),))
 
     for future in done:
         new_text, status_code = future.result()
@@ -94,10 +73,11 @@ async def sign_out_queue_handler(callback: types.CallbackQuery):
         await asyncio.wait((callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb),))
 
 
-@dp.throttled(anti_flood(), rate=2)
 async def skip_ahead_handler(callback: types.CallbackQuery):
     new_text, status_code = str(), -1
-    done, _ = await asyncio.wait((client_service.skip_ahead(callback.message.text, callback.from_user.username),))
+    user = callback.from_user
+    done, _ = await asyncio.wait(
+        (client_service.skip_ahead(callback.message.text, user.first_name, user.username),))
 
     for future in done:
         new_text, status_code = future.result()
@@ -118,13 +98,16 @@ async def skip_ahead_handler(callback: types.CallbackQuery):
         await callback.answer("❕ Что-то пошло не так.")
         return
 
-    await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
+    try:
+        await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
+    except exceptions.BadRequest:
+        pass
 
 
-@dp.throttled(anti_flood(), rate=2)
 async def push_tail_handler(callback: types.CallbackQuery):
     new_text, status_code = str(), -1
-    done, _ = await asyncio.wait((client_service.push_tail(callback.message.text, callback.from_user.username),))
+    user = callback.from_user
+    done, _ = await asyncio.wait((client_service.push_tail(callback.message.text, user.first_name, user.username),))
 
     for future in done:
         new_text, status_code = future.result()

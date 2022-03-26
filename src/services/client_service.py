@@ -1,9 +1,9 @@
 # Copyright 2021 aaaaaaaalesha
-
+import asyncio
 from typing import Tuple
 
 import aiogram
-from aiogram import types
+from aiogram import types, exceptions
 
 from src.keyboards.client_kb import queue_inl_kb
 
@@ -17,15 +17,25 @@ STATUS_NO_AFTER = 5
 
 async def add_queuers_text(queue_):
     callback: types.CallbackQuery = await queue_.pop()
-    msg_lines = callback.message.text.split()
+    msg_lines = callback.message.text.split('\n')
 
     await add_queuer(msg_lines, callback)
+
+    lock = asyncio.Lock()
+    await asyncio.sleep(1.)
+
     while queue_:
         callback = await queue_.pop()
-        await add_queuer(msg_lines, callback)
+
+        async with lock:
+            await add_queuer(msg_lines, callback)
 
     new_text = '\n'.join(msg_lines)
-    await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
+    try:
+        with lock:
+            await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
+    except exceptions.BadRequest:
+        pass
 
 
 async def add_queuer(msg_lines_: list, callback: types.CallbackQuery) -> None:
@@ -40,35 +50,37 @@ async def add_queuer(msg_lines_: list, callback: types.CallbackQuery) -> None:
     msg_lines_.append(f"{len(msg_lines_) - 1}. {match_str}")
 
 
-async def add_queuer_text(old_text: str, queuer_name: str, queuer_username: str) -> Tuple[str, int]:
-    """
-    Changes old_text, adding here a new queuer name.
-    @param old_text: str repr of old message;
-    @param queuer_name: new queuer name;
-    @param queuer_username: new queuer username;
-    @return: tuple with new message text and code status.
-    """
-    lines = old_text.split('\n')
+# async def add_queuer_text(old_text: str, first_name: str, queuer_username: str) -> Tuple[str, int]:
+#     """
+#     Changes old_text, adding here a new queuer name.
+#     @param old_text: str repr of old message;
+#     @param first_name: new queuer first name;
+#     @param queuer_username: new queuer username;
+#     @return: tuple with new message text and code status.
+#     """
+#     lines = old_text.split('\n')
+#
+#     match_str = f"{first_name} (@{queuer_username})"
+#     for i in range(2, len(lines)):
+#         if lines[i].rfind(match_str) != -1:
+#             return str(), STATUS_ALREADY_IN
+#
+#     lines.append(
+#         f"{len(lines) - 1}. {match_str})"
+#     )
+#
+#     return '\n'.join(lines), STATUS_OK
 
-    for i in range(2, len(lines)):
-        if lines[i].rfind(f"{queuer_name} @{queuer_username}") != -1:
-            return str(), STATUS_ALREADY_IN
 
-    lines.append(
-        f"{len(lines) - 1}. {queuer_name} (@{queuer_username})"
-    )
-
-    return '\n'.join(lines), STATUS_OK
-
-
-async def delete_queuer_text(old_text: str, queuer_username: str) -> Tuple[str, int]:
+async def delete_queuer_text(old_text: str, first_name: str, queuer_username: str) -> Tuple[str, int]:
     lines = old_text.split('\n')
     if len(lines) == 2:
         return str(), STATUS_NO_QUEUERS
     else:
         index_changer = -1
+        match_str = f"{first_name} (@{queuer_username})"
         for i in range(2, len(lines)):
-            if lines[i].find(f"@{queuer_username}") != -1:
+            if lines[i].rfind(match_str) != -1:
                 lines.pop(i)
                 index_changer = i
                 break
@@ -86,7 +98,7 @@ async def delete_queuer_text(old_text: str, queuer_username: str) -> Tuple[str, 
     return '\n'.join(lines), STATUS_OK
 
 
-async def skip_ahead(old_text: str, username: str) -> Tuple[str, int]:
+async def skip_ahead(old_text: str, first_name: str, queuer_username: str) -> Tuple[str, int]:
     lines = old_text.split('\n')
 
     if len(lines) == 2:
@@ -96,8 +108,9 @@ async def skip_ahead(old_text: str, username: str) -> Tuple[str, int]:
         return str(), STATUS_ONE_QUEUER
 
     index_changer = -1
+    match_str = f"{first_name} (@{queuer_username})"
     for i in range(2, len(lines)):
-        if lines[i].find(f"@{username}") != -1:
+        if lines[i].rfind(match_str) != -1:
             if i == len(lines) - 1:
                 return str(), STATUS_NO_AFTER
             index_changer = i
@@ -115,7 +128,7 @@ async def skip_ahead(old_text: str, username: str) -> Tuple[str, int]:
     return '\n'.join(lines), STATUS_OK
 
 
-async def push_tail(old_text: str, username: str) -> Tuple[str, int]:
+async def push_tail(old_text: str, first_name: str, username: str) -> Tuple[str, int]:
     lines = old_text.split('\n')
 
     if len(lines) == 2:
@@ -126,8 +139,10 @@ async def push_tail(old_text: str, username: str) -> Tuple[str, int]:
 
     index_changer = -1
     del_queuer = str()
+
+    match_str = f"{first_name} (@{username})"
     for i in range(2, len(lines)):
-        if lines[i].find(f"@{username}") != -1:
+        if lines[i].rfind(match_str) != -1:
             if i + 1 == len(lines):
                 return str(), STATUS_NO_AFTER
             del_queuer = lines.pop(i)

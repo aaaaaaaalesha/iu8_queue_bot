@@ -24,6 +24,8 @@ class UserQueue:
         self.__size += 1
 
     async def pop(self):
+        if self:
+            self.__size -= 1
         return await self.__queue.get()
 
     async def update_msg_text(self, msg_text: str) -> None:
@@ -31,7 +33,7 @@ class UserQueue:
 
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 # Initialize storage for FSM.
 storage = MemoryStorage()
