@@ -1,4 +1,4 @@
-# Copyright 2021 aaaaaaaalesha
+# Copyright 2022 aaaaaaaalesha
 
 import sqlite3
 from datetime import datetime
@@ -10,7 +10,9 @@ cursor = conn.cursor()
 
 def start_db() -> None:
     sql_script: str
-    # /app/src/ for Heroku
+
+    # For Heroku: "/app/src/db/init_db.sql"
+    # For local launching: "db/init_db.sql"
     with open('/app/src/db/init_db.sql', 'r') as sql_file:
         sql_script = sql_file.read()
 

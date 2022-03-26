@@ -12,9 +12,9 @@ async def new_chat_handler(message: types.Message):
         user = message.from_user
         await sql_add_admin(user.id, user.username)
         await sql_add_managed_chat(user.id, message.chat.id, message.chat.title)
-        await message.reply(f"Привет! Спасибо за приглашение, {user.full_name} (@{user.username}). "
-                            f"Теперь вы администратор очередей в этом чате.\n"
-                            f"Запланировать её можно в личном чате со мной. Приятной работы!")
+        await message.reply(f"Привет! Теперь {user.first_name} (@{user.username}) – "
+                            "администратор очередей в этом чате.\n"
+                            "Запланировать её можно в личном чате со мной. Приятной работы!")
 
 
 async def left_chat_handler(message: types.Message):
