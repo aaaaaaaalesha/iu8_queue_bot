@@ -11,7 +11,6 @@ from db import sqlite_db
 async def on_startup(_) -> None:
     print("Bot is online!")
     sqlite_db.start_db()
-    # TODO it doesnt works
 
 
 def main():
