@@ -1,5 +1,3 @@
-# Copyright 2021 aaaaaaaalesha
-
 from datetime import datetime
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext

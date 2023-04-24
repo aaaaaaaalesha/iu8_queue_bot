@@ -1,5 +1,3 @@
-# Copyright 2021 aaaaaaaalesha
-
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -10,7 +8,6 @@ PLANNED_QUEUES_TEXT = "🗒 Список запланированных очер
 main_kb = ReplyKeyboardMarkup(resize_keyboard=True)
 main_kb.row(KeyboardButton(PLAN_QUEUE_TEXT), KeyboardButton(DELETE_QUEUE_TEXT))
 main_kb.add(KeyboardButton(PLANNED_QUEUES_TEXT))
-
 
 queue_inl_kb = InlineKeyboardMarkup(row_width=2)
 queue_inl_kb.row(

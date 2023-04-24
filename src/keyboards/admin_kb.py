@@ -1,5 +1,3 @@
-# Copyright 2021 aaaaaaaalesha
-
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 cancel_button = InlineKeyboardButton(text='🚫 Отмена', callback_data='cancel_call', )

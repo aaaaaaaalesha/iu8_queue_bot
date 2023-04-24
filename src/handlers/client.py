@@ -1,4 +1,3 @@
-# Copyright 2021 aaaaaaaalesha
 import asyncio
 
 from aiogram import types, Dispatcher

@@ -1,5 +1,3 @@
-# Copyright 2021 aaaaaaaalesha
-
 import calendar
 from datetime import datetime, timedelta
 from pytz import timezone

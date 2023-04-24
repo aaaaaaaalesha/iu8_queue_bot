@@ -1,5 +1,3 @@
-# Copyright 2021 aaaaaaaalesha
-
 from aiogram import types, Dispatcher
 
 from src.create_bot import dp, bot

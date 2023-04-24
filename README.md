@@ -34,11 +34,20 @@
 </p>
 
 [comment]: <> (Techs)
-[![Telegram](https://img.shields.io/badge/aaaaaaaalesha-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/aaaaaaaalesha)
-![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
-![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
-![GitHub Actions](https://img.shields.io/badge/githubactions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white)
-![Heroku](https://img.shields.io/badge/heroku-%23430098.svg?style=for-the-badge&logo=heroku&logoColor=white)
+<p align="center">
+  <a href="#">
+    <img alt="Python" src="https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54">
+  </a>
+  <a href="#">
+    <img alt="SQLite" src="https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white">
+  </a>
+  <a href="#">
+    <img alt="GitHub Actions" src="https://img.shields.io/badge/githubactions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white">
+  </a>
+  <a href="#">
+    <img alt="Heroku" src="https://img.shields.io/badge/heroku-%23430098.svg?style=for-the-badge&logo=heroku&logoColor=white">
+  </a>
+</p>
 ---
 
 ## Телеграм-бот для создания очередей в групповых чатах
@@ -59,6 +68,8 @@
 
 #### Copyright © 2021, [Alexey Alexandrov](https://github.com/aaaaaaaalesha)
 
+[![Telegram](https://img.shields.io/badge/aaaaaaaalesha-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/aaaaaaaalesha)
 <a href="mailto:sks2311211@mail.ru">
-    <img alt="build status" src="https://img.shields.io/badge/-sks2311211@mail.ru-c14438?style=flat&logo=Gmail&logoColor=white&link=mailto:sks2311211@mail.ru" />
+<img alt="build status" src="https://img.shields.io/badge/-sks2311211@mail.ru-c14438?style=flat&logo=Gmail&logoColor=white&link=mailto:sks2311211@mail.ru" />
 </a>
+

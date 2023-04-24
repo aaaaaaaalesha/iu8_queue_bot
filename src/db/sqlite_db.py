@@ -1,5 +1,4 @@
-# Copyright 2022 aaaaaaaalesha
-
+import os
 import sqlite3
 from datetime import datetime
 from typing import Tuple
@@ -9,11 +8,12 @@ cursor = conn.cursor()
 
 
 def start_db() -> None:
-    sql_script: str
+    if os.getenv('DEBUG', 'True') == 'True':
+        sql_file_path = 'db/init_db.sql'
+    else:
+        sql_file_path = '/app/src/db/init_db.sql'
 
-    # For Heroku: "/app/src/db/init_db.sql"
-    # For local launching: "db/init_db.sql"
-    with open('/app/src/db/init_db.sql', 'r') as sql_file:
+    with open(sql_file_path, 'r') as sql_file:
         sql_script = sql_file.read()
 
     cursor.executescript(sql_script)
