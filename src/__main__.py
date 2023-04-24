@@ -6,7 +6,7 @@ from db import sqlite_db
 
 
 async def on_startup(_) -> None:
-    logger.info("Bot is online!")
+    logger.info("Bot now is online!")
     sqlite_db.start_db()
 
 
@@ -14,7 +14,11 @@ def main():
     admin.register_admin_handlers(dp)
     client.register_client_handlers(dp)
     shared.register_shared_handlers(dp)
-    executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
+    executor.start_polling(
+        dispatcher=dp,
+        skip_updates=True,
+        on_startup=on_startup,
+    )
 
 
 if __name__ == '__main__':

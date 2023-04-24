@@ -11,10 +11,22 @@ main_kb.add(KeyboardButton(PLANNED_QUEUES_TEXT))
 
 queue_inl_kb = InlineKeyboardMarkup(row_width=2)
 queue_inl_kb.row(
-    InlineKeyboardButton(text='⤴️ Встать в очередь', callback_data='sign_in'),
-    InlineKeyboardButton(text='↩️ Покинуть очередь', callback_data='sign_out')
+    InlineKeyboardButton(
+        text='⤴️ Встать в очередь',
+        callback_data='sign_in',
+    ),
+    InlineKeyboardButton(
+        text='↩️ Покинуть очередь',
+        callback_data='sign_out',
+    )
 )
 queue_inl_kb.add(
-    InlineKeyboardButton(text='🔃 Пропустить вперёд', callback_data='skip_ahead'),
-    InlineKeyboardButton(text='↪️ В хвост очереди', callback_data='in_tail')
+    InlineKeyboardButton(
+        text='🔃 Пропустить вперёд',
+        callback_data='skip_ahead',
+    ),
+    InlineKeyboardButton(
+        text='↪️ В хвост очереди',
+        callback_data='in_tail',
+    )
 )
