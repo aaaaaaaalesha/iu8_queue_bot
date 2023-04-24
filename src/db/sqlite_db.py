@@ -1,18 +1,20 @@
 import os
 import sqlite3
+import logging
+
 from datetime import datetime
 from typing import Tuple
 
 conn = sqlite3.connect('queue_bot.db')
 cursor = conn.cursor()
 
+logging.basicConfig(level=logging.INFO)
+
 
 def start_db() -> None:
-    if os.getenv('DEBUG', 'True') == 'True':
-        sql_file_path = 'db/init_db.sql'
-    else:
-        sql_file_path = '/app/src/db/init_db.sql'
-
+    debug = bool(os.getenv('DEBUG', 'True'))
+    logging.info(f'DEBUG={debug}')
+    sql_file_path = 'db/init_db.sql' if debug else '/app/src/db/init_db.sql'
     with open(sql_file_path, 'r') as sql_file:
         sql_script = sql_file.read()
 
@@ -20,7 +22,7 @@ def start_db() -> None:
     conn.commit()
 
     if conn:
-        print("Data base has been connected!")
+        logging.info("Data base has been connected!")
 
 
 def sql_get_queue_list(admin_id_: int) -> list:
