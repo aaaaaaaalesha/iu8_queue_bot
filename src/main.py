@@ -1,12 +1,12 @@
 from aiogram import executor
 
-from create_bot import dp
+from create_bot import dp, logger
 from handlers import admin, client, shared
 from db import sqlite_db
 
 
 async def on_startup(_) -> None:
-    print("Bot is online!")
+    logger.info("Bot is online!")
     sqlite_db.start_db()
 
 
