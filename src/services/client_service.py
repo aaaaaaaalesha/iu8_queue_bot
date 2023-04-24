@@ -1,3 +1,5 @@
+"""Это всё нужно менять нахер..."""
+
 from enum import StrEnum
 
 
