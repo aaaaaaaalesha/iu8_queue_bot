@@ -3,12 +3,13 @@ import logging
 
 from dotenv import load_dotenv
 
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 load_dotenv('.env')
 
 # Configure logging
+logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO)
 
 # Initialize storage for FSM.

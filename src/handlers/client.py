@@ -7,26 +7,24 @@ from aiogram.utils.exceptions import RetryAfter
 from src.create_bot import dp, bot
 from src.keyboards.client_kb import main_kb, queue_inl_kb
 from src.services import client_service
+from src.services.client_service import QueueStatus
 
 
 async def start_handler(message: types.Message):
-    """
-    Handler for `/start` command.
-    """
-    await bot.send_message(message.from_user.id,
-                           f"Привет, {message.from_user.first_name} (@{message.from_user.username})!\n"
-                           f"Я IU8-QueueBot - бот для создания очередей.\n"
-                           "Давайте начнём: можете использовать команды (/help) "
-                           f"или кнопки клавиатуры для работы со мной. В случае возникновения проблем, пишите "
-                           f"@aaaaaaaalesha",
-                           reply_markup=main_kb
-                           )
+    """Функция-handler для команды `/start`."""
+    await bot.send_message(
+        message.from_user.id,
+        f"Привет, {message.from_user.first_name} (@{message.from_user.username})!\n"
+        f"Я IU8-QueueBot - бот для создания очередей.\n"
+        "Давайте начнём: можете использовать команды (/help) "
+        f"или кнопки клавиатуры для работы со мной. В случае возникновения проблем, пишите "
+        f"@aaaaaaaalesha",
+        reply_markup=main_kb,
+    )
 
 
 async def help_handler(message: types.Message):
-    """
-    Handler for `/help` command.
-    """
+    """Функция-handler для команды `/help`."""
     await bot.send_message(
         message.from_user.id,
         "/start - Начало работы с ботом \n"
@@ -39,106 +37,95 @@ async def help_handler(message: types.Message):
 
 
 async def flood_handler(update: types.Update, exception: RetryAfter):
-    await update.message.answer(f"Не так быстро! Подождите {exception.timeout} секунд")
+    answer_msg = f"Не так быстро! Подождите {exception.timeout} секунд"
+    if update.message is not None:
+        await update.message.answer(answer_msg)
+    elif update.callback_query is not None:
+        await update.message.answer(answer_msg)
 
 
 async def sign_in_queue_handler(callback: types.CallbackQuery):
     user = callback.from_user
-    done, _ = await asyncio.wait(
-        (client_service.add_queuer_text(callback.message.text, user.first_name, user.username),)
+    new_text, status_code = await client_service.add_queuer_text(
+        callback.message.text,
+        user.first_name,
+        user.username,
     )
-    for future in done:
-        new_text, status_code = future.result()
-        if status_code != client_service.STATUS_OK:
-            if status_code == client_service.STATUS_ALREADY_IN:
-                await callback.answer("❕ Вы уже в очереди.")
-                return
-        await asyncio.wait((callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb),))
+    match status_code:
+        case QueueStatus.OK:
+            await callback.message.edit_text(
+                text=new_text,
+                reply_markup=queue_inl_kb,
+            )
+        case QueueStatus.EXISTS:
+            await callback.answer("❕ Вы уже в очереди.")
 
 
 async def sign_out_queue_handler(callback: types.CallbackQuery):
     user = callback.from_user
-    done, _ = await asyncio.wait(
-        (client_service.delete_queuer_text(callback.message.text, user.first_name, user.username),)
+    new_text, status_code = await client_service.delete_queuer_text(
+        callback.message.text,
+        user.first_name,
+        user.username,
     )
 
-    for future in done:
-        new_text, status_code = future.result()
-        if status_code != client_service.STATUS_OK:
-            if status_code == client_service.STATUS_NO_QUEUERS:
-                await callback.answer("❕ В очереди ещё нет участников.")
-                return
-            if status_code == client_service.STATUS_NOT_QUEUER:
-                await callback.answer(f"❕ @{callback.from_user.username} ещё не участник очереди.")
-                return
-
-        await asyncio.wait((callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb),))
+    match status_code:
+        case QueueStatus.OK:
+            await callback.message.edit_text(
+                text=new_text,
+                reply_markup=queue_inl_kb,
+            )
+        case QueueStatus.EMPTY | QueueStatus.NOT_QUEUER as answer:
+            await callback.answer(answer)
 
 
 async def skip_ahead_handler(callback: types.CallbackQuery):
-    new_text, status_code = str(), -1
-
     user = callback.from_user
-    done, _ = await asyncio.wait(
-        (client_service.skip_ahead(callback.message.text, user.first_name, user.username),)
+    new_text, status_code = await client_service.skip_ahead(
+        callback.message.text,
+        user.first_name,
+        user.username,
     )
-
-    for future in done:
-        new_text, status_code = future.result()
-
-    if status_code != client_service.STATUS_OK:
-        if status_code == client_service.STATUS_NO_QUEUERS:
-            await callback.answer("❕ В очереди ещё нет участников.")
-            return
-        if status_code == client_service.STATUS_ONE_QUEUER:
-            await callback.answer("❕ В очереди только один участник.")
-            return
-        if status_code == client_service.STATUS_NOT_QUEUER:
-            await callback.answer("❕ Вы ещё не участник очереди.")
-            return
-        if status_code == client_service.STATUS_NO_AFTER:
-            await callback.answer("❕ Вы крайний в очереди.")
-            return
-        await callback.answer("❕ Что-то пошло не так.")
-        return
-
-    await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
+    match status_code:
+        case QueueStatus.OK:
+            await callback.message.edit_text(
+                text=new_text,
+                reply_markup=queue_inl_kb,
+            )
+        case (QueueStatus.EMPTY
+              | QueueStatus.ONE_QUEUER
+              | QueueStatus.NOT_QUEUER
+              | QueueStatus.NO_AFTER) as answer:
+            await callback.answer(answer)
+        case _:
+            await callback.answer("❕ Что-то пошло не так")
 
 
 async def push_tail_handler(callback: types.CallbackQuery):
-    new_text, status_code = str(), -1
-
     user = callback.from_user
-    done, _ = await asyncio.wait(
-        (client_service.push_tail(callback.message.text, user.first_name, user.username),)
+    new_text, status_code = await client_service.push_tail(
+        callback.message.text,
+        user.first_name,
+        user.username,
     )
 
-    for future in done:
-        new_text, status_code = future.result()
-
-    if status_code != client_service.STATUS_OK:
-        if status_code == client_service.STATUS_NO_QUEUERS:
-            await callback.answer("❕ В очереди ещё нет участников.")
-            return
-        if status_code == client_service.STATUS_ONE_QUEUER:
-            await callback.answer("❕ В очереди только один участник.")
-            return
-        if status_code == client_service.STATUS_NOT_QUEUER:
-            await callback.answer("❕ Вы ещё не участник очереди.")
-            return
-        if status_code == client_service.STATUS_NO_AFTER:
-            await callback.answer("❕ Вы крайний в очереди.")
-            return
-        await callback.answer("❕ Что-то пошло не так.")
-        return
-
-    await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
+    match status_code:
+        case QueueStatus.OK:
+            await callback.message.edit_text(
+                text=new_text,
+                reply_markup=queue_inl_kb,
+            )
+        case (QueueStatus.EMPTY
+              | QueueStatus.ONE_QUEUER
+              | QueueStatus.NOT_QUEUER
+              | QueueStatus.NO_AFTER) as answer:
+            await callback.answer(answer)
+        case _:
+            await callback.answer("❕ Что-то пошло не так")
 
 
 def register_client_handlers(dp_: Dispatcher) -> None:
-    """
-    Function registers all handlers for client.
-    """
+    """Регистрация всех handler-функций для клиента."""
     dp_.register_message_handler(start_handler, commands='start', state=None)
     dp_.register_message_handler(help_handler, commands="help", state=None)
     dp_.register_errors_handler(flood_handler, exception=RetryAfter)
