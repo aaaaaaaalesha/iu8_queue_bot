@@ -5,7 +5,12 @@ import logging
 from datetime import datetime
 from typing import Tuple
 
-conn = sqlite3.connect('queue_bot.db')
+conn = sqlite3.connect(
+    os.getenv(
+        'DATABASE',
+        default='queue_bot.db',
+    )
+)
 cursor = conn.cursor()
 
 logging.basicConfig(level=logging.INFO)
@@ -22,7 +27,13 @@ def start_db() -> None:
     conn.commit()
 
     if conn:
-        logging.info("Data base has been connected!")
+        logging.info("Database has been connected!")
+
+
+def stop_db() -> None:
+    cursor.close()
+    conn.close()
+    logging.info("Database has been disconnected!")
 
 
 def sql_get_queue_list(admin_id_: int) -> list:
@@ -32,7 +43,6 @@ def sql_get_queue_list(admin_id_: int) -> list:
         "WHERE assignee_id = ?",
         (admin_id_,),
     )
-
     return cursor.fetchall()
 
 
@@ -43,7 +53,6 @@ async def sql_get_queue_from_list(id_: int) -> tuple:
         "WHERE id = ?",
         (id_,),
     )
-
     return cursor.fetchone()
 
 
@@ -54,7 +63,6 @@ def sql_get_chat_title(chat_id_: int) -> tuple:
         "WHERE chat_id = ?",
         (chat_id_,),
     )
-
     return cursor.fetchone()
 
 
@@ -65,7 +73,6 @@ def sql_get_managed_chats(admin_id_: int) -> list:
         f"WHERE assignee_id = ?",
         (admin_id_,),
     )
-
     return cursor.fetchall()
 
 
@@ -118,7 +125,6 @@ async def sql_add_queue(admin_id_: int, queue_name_: str, start_dt: datetime, ch
         "WHERE assignee_id = ? AND queue_name = ? AND chat_id = ?",
         (admin_id_, queue_name_, chat_id_),
     )
-
     return cursor.fetchone()
 
 
@@ -152,7 +158,6 @@ async def sql_delete_queue(id_: int) -> Tuple[int, int]:
         (id_,),
     )
     conn.commit()
-
     return chat_id[0], msg_id[0]
 
 

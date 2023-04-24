@@ -14,10 +14,18 @@ from src.db.sqlite_db import (
     sql_get_managed_chats,
     sql_get_chat_title,
 )
+from src.keyboards.client_kb import (
+    PLAN_QUEUE_TEXT,
+    DELETE_QUEUE_TEXT,
+    PLANNED_QUEUES_TEXT,
+)
+from src.services.admin_service import (
+    EarlierException,
+    parse_to_datetime,
+    wait_for_queue_launch,
+)
 from src.create_bot import dp, bot
 from src.keyboards import admin_kb, calendar_kb
-from src.keyboards.client_kb import PLAN_QUEUE_TEXT, DELETE_QUEUE_TEXT, PLANNED_QUEUES_TEXT
-from src.services.admin_service import EarlierException, parse_to_datetime, wait_for_queue_launch
 
 
 class FSMPlanning(StatesGroup):
@@ -74,7 +82,15 @@ async def queues_list_handler(msg: types.Message) -> tuple:
 """ Planning queue zone"""
 
 
-async def start_planning(action: types.Message | types.CallbackQuery) -> None:
+async def queue_plan_handler(msg: types.Message) -> None:
+    await __start_planning(msg)
+
+
+async def queue_plan_inline_handler(callback: types.CallbackQuery) -> None:
+    await __start_planning(callback)
+
+
+async def __start_planning(action: types.Message | types.CallbackQuery) -> None:
     """
     Функция старта планирования очередей.
     Если бот добавлен вами в групповые чаты, он предложит вам
@@ -111,14 +127,6 @@ async def start_planning(action: types.Message | types.CallbackQuery) -> None:
     )
 
 
-async def queue_plan_inline_handler(callback: types.CallbackQuery) -> None:
-    await start_planning(callback)
-
-
-async def queue_plan_handler(msg: types.Message) -> None:
-    await start_planning(msg)
-
-
 async def queue_set_chat_handler(callback: types.CallbackQuery, state: FSMContext) -> None:
     """
     Функция-handler сохранения выбранного чата.
@@ -148,8 +156,7 @@ async def queue_set_chat_handler(callback: types.CallbackQuery, state: FSMContex
 
 async def set_queue_name_handler(msg: types.Message, state: FSMContext) -> None:
     """
-    Функция-handler сохранения имени очереди.
-    Переводит в состояние выбора даты старта очереди,
+    Функция-handler сохранения имени очереди. Переводит в состояние выбора даты старта очереди,
     иначе выводит ошибку и просит повторить ввод.
     """
     if not msg.text or msg.text in (PLAN_QUEUE_TEXT, DELETE_QUEUE_TEXT, PLANNED_QUEUES_TEXT):
@@ -204,10 +211,7 @@ async def set_datetime_handler(msg: types.Message, state: FSMContext) -> None:
     start_datetime: datetime
     async with state.proxy() as data:
         try:
-            start_datetime = parse_to_datetime(
-                data["selected_date"],
-                msg.text,
-            )
+            start_datetime = parse_to_datetime(data["selected_date"], msg.text)
         except ValueError:
             await bot.send_message(
                 msg.from_user.id,
@@ -261,6 +265,9 @@ async def set_datetime_handler(msg: types.Message, state: FSMContext) -> None:
 
 
 async def choose_queue_to_delete_handler(msg: types.Message) -> None:
+    """
+    Функция-handler выбора запланированной очереди для удаления.
+    """
     planned_queues, del_msg = await queues_list_handler(msg)
 
     if not planned_queues or del_msg is None:
@@ -280,20 +287,23 @@ async def choose_queue_to_delete_handler(msg: types.Message) -> None:
     await FSMDeletion.queue_choice.set()
 
 
+@dp.callback_query_handler(Text(startswith='delete_queue_'), state=FSMDeletion.queue_choice)
 async def delete_queue_handler(callback: types.CallbackQuery, state: FSMContext):
+    """
+    Функция-handler удаления запланированной очереди.
+    """
     chat_id, msg_id = await sql_delete_queue(int(callback.data[len("delete_queue_"):]))
-    await bot.delete_message(chat_id, msg_id)
-    await callback.answer('💥 Очередь удалена')
-    await messages_tuple[0].delete()
-    await messages_tuple[1].delete()
-    await state.finish()
+    try:
+        await bot.delete_message(chat_id, msg_id)
+        await messages_tuple[0].delete()
+        await messages_tuple[1].delete()
+    finally:
+        await callback.answer('💥 Очередь удалена')
+        await state.finish()
 
 
 def register_admin_handlers(dp_: Dispatcher) -> None:
-    """
-    Function for registration all handlers for admin.
-    :return: None
-    """
+    """Регистрация всех handler-функций для админа."""
     dp_.register_callback_query_handler(
         cancel_handler, text="cancel_call", state="*"
     )
