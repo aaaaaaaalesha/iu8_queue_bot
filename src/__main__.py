@@ -16,9 +16,12 @@ async def on_shutdown(_) -> None:
 
 
 def main():
+    # Регистрация handler-функций.
     admin.register_admin_handlers(dp)
     client.register_client_handlers(dp)
     shared.register_shared_handlers(dp)
+
+    # Запуск бота в режиме опроса.
     executor.start_polling(
         dispatcher=dp,
         skip_updates=True,

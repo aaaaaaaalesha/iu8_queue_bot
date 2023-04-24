@@ -12,7 +12,6 @@ class QueueStatus(StrEnum):
 
 async def add_queuer_text(old_text: str, first_name: str, username: str) -> tuple[str, QueueStatus]:
     lines = old_text.split('\n')
-
     match_str = f"{first_name} (@{username})"
     for i in range(2, len(lines)):
         if lines[i].rfind(match_str) != -1:

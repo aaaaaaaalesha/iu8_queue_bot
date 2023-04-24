@@ -16,7 +16,9 @@ async def wait_for_queue_launch(start_dt: datetime, chat_id: int, queue_id: int)
     """
     Ожидание начала запуска очереди в групповом чате.
     """
-    await asyncio.sleep((start_dt - datetime.now(timezone('Europe/Moscow'))).seconds)
+    await asyncio.sleep(
+        (start_dt - datetime.now(timezone('Europe/Moscow'))).seconds
+    )
 
     # Проверим, что очередь не была удалена.
     queue_data = await sql_get_queue_from_list(queue_id)
@@ -29,7 +31,7 @@ async def wait_for_queue_launch(start_dt: datetime, chat_id: int, queue_id: int)
 
     msg = await bot.send_message(
         chat_id,
-        f"🆕 🅠🅤🅔🅤🅔 🆕\nОчередь «{queue_data[2]}» запущена!\n\n",
+        f"🆕 🅠🅤🅔🅤🅔 🆕\n Очередь «{queue_data[2]}» запущена!\n\n",
         reply_markup=client_kb.queue_inl_kb
     )
     try:
@@ -45,11 +47,12 @@ def parse_to_datetime(date: datetime, input_time: str) -> datetime:
     Парсинг времени в формате hh:mm, а также проверка, что введённое время позже указанного.
     """
     dt_now = datetime.now(timezone('Europe/Moscow'))
-    h, m = map(int, input_time.split(':'))
-    resulted_date = date.replace(hour=h, minute=m, tzinfo=timezone('Europe/Moscow'))
-    if resulted_date < dt_now:
+    h, m = tuple(map(int, input_time.split(':')))
+
+    resulted_date = date
+    if resulted_date.replace(hour=h, minute=m, second=0) < dt_now:
         raise EarlierException(
             f"❌ Введённое время раньше текущего!\nСейчас {dt_now.strftime('%H:%M')}"
         )
 
-    return resulted_date
+    return date.replace(hour=h, minute=m, second=0, tzinfo=dt_now.tzinfo)

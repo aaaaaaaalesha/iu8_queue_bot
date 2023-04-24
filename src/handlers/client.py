@@ -37,88 +37,91 @@ async def help_handler(message: types.Message):
 
 
 async def flood_handler(update: types.Update, exception: RetryAfter):
-    await update.message.answer(f"Не так быстро! Подождите {exception.timeout} секунд")
+    answer_msg = f"Не так быстро! Подождите {exception.timeout} секунд"
+    if update.message is not None:
+        await update.message.answer(answer_msg)
+    elif update.callback_query is not None:
+        await update.message.answer(answer_msg)
 
 
 async def sign_in_queue_handler(callback: types.CallbackQuery):
     user = callback.from_user
-    done, _ = await asyncio.wait(
-        (client_service.add_queuer_text(
-            callback.message.text,
-            user.first_name,
-            user.username
-        ),)
+    new_text, status_code = await client_service.add_queuer_text(
+        callback.message.text,
+        user.first_name,
+        user.username,
     )
-    for future in done:
-        new_text, status_code = future.result()
-        match status_code:
-            case QueueStatus.OK:
-                await asyncio.wait((callback.message.edit_text(
-                    text=new_text,
-                    reply_markup=queue_inl_kb,
-                ),))
-            case QueueStatus.EXISTS:
-                await callback.answer("❕ Вы уже в очереди.")
+    match status_code:
+        case QueueStatus.OK:
+            await callback.message.edit_text(
+                text=new_text,
+                reply_markup=queue_inl_kb,
+            )
+        case QueueStatus.EXISTS:
+            await callback.answer("❕ Вы уже в очереди.")
 
 
 async def sign_out_queue_handler(callback: types.CallbackQuery):
     user = callback.from_user
-    done, _ = await asyncio.wait(
-        (client_service.delete_queuer_text(
-            callback.message.text,
-            user.first_name,
-            user.username,
-        ),)
+    new_text, status_code = await client_service.delete_queuer_text(
+        callback.message.text,
+        user.first_name,
+        user.username,
     )
 
-    for future in done:
-        new_text, status_code = future.result()
-
-        match status_code:
-            case QueueStatus.OK:
-                await asyncio.wait((callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb),))
-            case QueueStatus.EMPTY | QueueStatus.NOT_QUEUER as answer:
-                await callback.answer(answer)
+    match status_code:
+        case QueueStatus.OK:
+            await callback.message.edit_text(
+                text=new_text,
+                reply_markup=queue_inl_kb,
+            )
+        case QueueStatus.EMPTY | QueueStatus.NOT_QUEUER as answer:
+            await callback.answer(answer)
 
 
 async def skip_ahead_handler(callback: types.CallbackQuery):
     user = callback.from_user
-    done, _ = await asyncio.wait(
-        (client_service.skip_ahead(callback.message.text, user.first_name, user.username),)
+    new_text, status_code = await client_service.skip_ahead(
+        callback.message.text,
+        user.first_name,
+        user.username,
     )
-
-    for future in done:
-        new_text, status_code = future.result()
-        match status_code:
-            case QueueStatus.OK:
-                await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
-            case (QueueStatus.EMPTY
-                  | QueueStatus.ONE_QUEUER
-                  | QueueStatus.NOT_QUEUER
-                  | QueueStatus.NO_AFTER) as answer:
-                await callback.answer(answer)
-            case _:
-                await callback.answer("❕ Что-то пошло не так")
+    match status_code:
+        case QueueStatus.OK:
+            await callback.message.edit_text(
+                text=new_text,
+                reply_markup=queue_inl_kb,
+            )
+        case (QueueStatus.EMPTY
+              | QueueStatus.ONE_QUEUER
+              | QueueStatus.NOT_QUEUER
+              | QueueStatus.NO_AFTER) as answer:
+            await callback.answer(answer)
+        case _:
+            await callback.answer("❕ Что-то пошло не так")
 
 
 async def push_tail_handler(callback: types.CallbackQuery):
     user = callback.from_user
-    done, _ = await asyncio.wait(
-        (client_service.push_tail(callback.message.text, user.first_name, user.username),)
+    new_text, status_code = await client_service.push_tail(
+        callback.message.text,
+        user.first_name,
+        user.username,
     )
 
-    for future in done:
-        new_text, status_code = future.result()
-        match status_code:
-            case QueueStatus.OK:
-                await callback.message.edit_text(text=new_text, reply_markup=queue_inl_kb)
-            case (QueueStatus.EMPTY
-                  | QueueStatus.ONE_QUEUER
-                  | QueueStatus.NOT_QUEUER
-                  | QueueStatus.NO_AFTER) as answer:
-                await callback.answer(answer)
-            case _:
-                await callback.answer("❕ Что-то пошло не так")
+    match status_code:
+        case QueueStatus.OK:
+            await callback.message.edit_text(
+                text=new_text,
+                reply_markup=queue_inl_kb,
+            )
+        case (QueueStatus.EMPTY
+              | QueueStatus.ONE_QUEUER
+              | QueueStatus.NOT_QUEUER
+              | QueueStatus.NO_AFTER) as answer:
+            await callback.answer(answer)
+        case _:
+            await callback.answer("❕ Что-то пошло не так")
 
 
 def register_client_handlers(dp_: Dispatcher) -> None:

@@ -243,13 +243,13 @@ async def set_datetime_handler(msg: types.Message, state: FSMContext) -> None:
 
     await bot.send_message(
         msg.from_user.id,
-        f"✅Очередь «{queue_name}» запланирована в чате «{chat_title}»!\n"
+        f"✅ Очередь «{queue_name}» запланирована в чате «{chat_title}»!\n"
         f"Начало очереди: {start_datetime.strftime('%d.%m.%Y в %H:%M')}",
     )
 
     await bot.send_message(
         chat_id,
-        f"✅Очередь «{queue_name}» запланирована!\n"
+        f"✅ Очередь «{queue_name}» запланирована!\n"
         f"Начало очереди: {start_datetime.strftime('%d.%m.%Y в %H:%M')}",
     )
 
@@ -281,8 +281,14 @@ async def choose_queue_to_delete_handler(msg: types.Message) -> None:
     inl_kb_choices.add(admin_kb.cancel_button)
 
     global messages_tuple
-    messages_tuple = (del_msg, await bot.send_message(msg.from_user.id, '🗑 Выберите очередь, которую хотите удалить:',
-                                                      reply_markup=inl_kb_choices))
+    messages_tuple = (
+        del_msg,
+        await bot.send_message(
+            msg.from_user.id,
+            '🗑 Выберите очередь, которую хотите удалить:',
+            reply_markup=inl_kb_choices,
+        )
+    )
 
     await FSMDeletion.queue_choice.set()
 
@@ -297,6 +303,8 @@ async def delete_queue_handler(callback: types.CallbackQuery, state: FSMContext)
         await bot.delete_message(chat_id, msg_id)
         await messages_tuple[0].delete()
         await messages_tuple[1].delete()
+    except TypeError:
+        pass
     finally:
         await callback.answer('💥 Очередь удалена')
         await state.finish()
