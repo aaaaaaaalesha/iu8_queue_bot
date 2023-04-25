@@ -1,34 +1,23 @@
 from aiogram import executor
 
-from create_bot import dp, logger
+from src.loader import logger, bot, dp, db
 from handlers import admin, client, shared
-from db import sqlite_db
 
 
 async def on_startup(_) -> None:
+    await db.connect()
+    await db.create_tables()
     logger.info("Bot now is online!")
-    sqlite_db.start_db()
 
 
-async def on_shutdown(_) -> None:
-    logger.info("Bot now is offline!")
-    sqlite_db.stop_db()
-
-
-def main():
-    # Регистрация handler-функций.
-    admin.register_admin_handlers(dp)
-    client.register_client_handlers(dp)
-    shared.register_shared_handlers(dp)
-
-    # Запуск бота в режиме опроса.
-    executor.start_polling(
-        dispatcher=dp,
-        skip_updates=True,
-        on_startup=on_startup,
-        on_shutdown=on_shutdown,
-    )
+async def on_startup_wrapper(dp) -> None:
+    await on_startup(dp)
 
 
 if __name__ == '__main__':
-    main()
+    # Запуск бота в режиме опроса.
+    executor.start_polling(
+        dispatcher=dp,
+        on_startup=lambda dp: on_startup_wrapper(dp),
+        skip_updates=True,
+    )

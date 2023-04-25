@@ -1,19 +1,11 @@
 import datetime as dt
 
-from aiogram import types, Dispatcher
+from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import InlineKeyboardMarkup
 
-from src.db.sqlite_db import (
-    sql_get_queue_list,
-    sql_add_queue,
-    sql_add_admin,
-    sql_delete_queue,
-    sql_get_managed_chats,
-    sql_get_chat_title,
-)
 from src.keyboards.client_kb import (
     PLAN_QUEUE_TEXT,
     DELETE_QUEUE_TEXT,
@@ -24,7 +16,7 @@ from src.services.admin_service import (
     parse_to_datetime,
     wait_for_queue_launch,
 )
-from src.create_bot import dp, bot
+from src.loader import dp, db, bot
 from src.keyboards import admin_kb, calendar_kb
 
 
@@ -41,6 +33,7 @@ class FSMDeletion(StatesGroup):
     queue_choice = State()
 
 
+@dp.callback_query_handler(text="cancel_call", state="*")
 async def cancel_handler(callback: types.CallbackQuery, state: FSMContext) -> None:
     """
     Функция-handler отмены действия.
@@ -51,11 +44,13 @@ async def cancel_handler(callback: types.CallbackQuery, state: FSMContext) -> No
     await state.finish()
 
 
+@dp.message_handler(commands="queues_list", state=None)
+@dp.message_handler(Text(equals='🗒 Список запланированных очередей'), state=None)
 async def queues_list_handler(msg: types.Message) -> tuple:
     """
     Функция-handler выдачи списка запланированных очередей.
     """
-    found_queues = sql_get_queue_list(msg.from_user.id)
+    found_queues = await db.get_queue_list(msg.from_user.id)
     if not found_queues:
         await bot.send_message(
             msg.from_user.id,
@@ -79,15 +74,7 @@ async def queues_list_handler(msg: types.Message) -> tuple:
     return found_queues, planned_msg
 
 
-""" Planning queue zone"""
-
-
-async def queue_plan_handler(msg: types.Message) -> None:
-    await __start_planning(msg)
-
-
-async def queue_plan_inline_handler(callback: types.CallbackQuery) -> None:
-    await __start_planning(callback)
+"""Planning queue zone"""
 
 
 async def __start_planning(action: types.Message | types.CallbackQuery) -> None:
@@ -97,7 +84,7 @@ async def __start_planning(action: types.Message | types.CallbackQuery) -> None:
     выбрать, в каком именно вы хотите запланировать очередь.
     """
     await action.answer('📑 Переходим к планированию очереди...')
-    managed_chats = sql_get_managed_chats(action.from_user.id)
+    managed_chats = await db.get_managed_chats(action.from_user.id)
 
     if not managed_chats:
         await bot.send_message(
@@ -108,7 +95,7 @@ async def __start_planning(action: types.Message | types.CallbackQuery) -> None:
         return
 
     await FSMPlanning.choose_chat.set()
-    await sql_add_admin(action.from_user.id, action.from_user.username)
+    await db.add_admin(action.from_user.id, action.from_user.username)
 
     inl_kb_chat_choices = InlineKeyboardMarkup()
     for chat_id, chat_title in managed_chats:
@@ -127,6 +114,18 @@ async def __start_planning(action: types.Message | types.CallbackQuery) -> None:
     )
 
 
+@dp.message_handler(Text(equals='📌 Запланировать очередь'), state=None)
+@dp.message_handler(commands='plan_queue', state=None)
+async def queue_plan_handler(msg: types.Message) -> None:
+    await __start_planning(msg)
+
+
+@dp.callback_query_handler(text="plan_queue", state=None)
+async def queue_plan_inline_handler(callback: types.CallbackQuery) -> None:
+    await __start_planning(callback)
+
+
+@dp.callback_query_handler(Text(startswith='choose_chat_'), state=FSMPlanning.choose_chat)
 async def queue_set_chat_handler(callback: types.CallbackQuery, state: FSMContext) -> None:
     """
     Функция-handler сохранения выбранного чата.
@@ -135,7 +134,7 @@ async def queue_set_chat_handler(callback: types.CallbackQuery, state: FSMContex
     """
     async with state.proxy() as data:
         chat_id = int(callback.data[len("choose_chat_"):])
-        chat_title = sql_get_chat_title(chat_id)
+        chat_title = await db.get_chat_title(chat_id)
         if not chat_title:
             await callback.answer(
                 "Кажется, бота уже нет в данном чате, попробуйте снова.",
@@ -154,6 +153,7 @@ async def queue_set_chat_handler(callback: types.CallbackQuery, state: FSMContex
     )
 
 
+@dp.message_handler(content_types='text', state=FSMPlanning.queue_name)
 async def set_queue_name_handler(msg: types.Message, state: FSMContext) -> None:
     """
     Функция-handler сохранения имени очереди. Переводит в состояние выбора даты старта очереди,
@@ -178,6 +178,7 @@ async def set_queue_name_handler(msg: types.Message, state: FSMContext) -> None:
     )
 
 
+@dp.callback_query_handler(calendar_kb.calendar_callback.filter(), state=FSMPlanning.start_date)
 async def set_date_handler(
         callback: types.CallbackQuery,
         callback_data: dict,
@@ -203,6 +204,7 @@ async def set_date_handler(
         )
 
 
+@dp.message_handler(content_types='text', state=FSMPlanning.start_datetime)
 async def set_datetime_handler(msg: types.Message, state: FSMContext) -> None:
     """
     Функция-handler сохранения времени и других собранных данных в БД.
@@ -232,7 +234,7 @@ async def set_datetime_handler(msg: types.Message, state: FSMContext) -> None:
     queue_name = data['queue_name']
     chat_id = data['chat_id']
     chat_title = data['chat_title']
-    queue_id = await sql_add_queue(
+    queue_id = await db.add_queue(
         msg.from_user.id,
         queue_name,
         start_datetime,
@@ -260,9 +262,11 @@ async def set_datetime_handler(msg: types.Message, state: FSMContext) -> None:
     )
 
 
-""" Deleting queue zone"""
+"""Deleting queue zone"""
 
 
+@dp.message_handler(commands='delete_queue', state=None)
+@dp.message_handler(Text(equals='🗑 Удалить очередь'), state=None)
 async def choose_queue_to_delete_handler(msg: types.Message) -> None:
     """
     Функция-handler выбора запланированной очереди для удаления.
@@ -297,7 +301,7 @@ async def delete_queue_handler(callback: types.CallbackQuery, state: FSMContext)
     """
     Функция-handler удаления запланированной очереди.
     """
-    chat_id, msg_id = await sql_delete_queue(int(callback.data[len("delete_queue_"):]))
+    chat_id, msg_id = await db.delete_queue(int(callback.data[len("delete_queue_"):]))
     try:
         await bot.delete_message(chat_id, msg_id)
         await messages_tuple[0].delete()
@@ -307,48 +311,3 @@ async def delete_queue_handler(callback: types.CallbackQuery, state: FSMContext)
     finally:
         await callback.answer('💥 Очередь удалена')
         await state.finish()
-
-
-def register_admin_handlers(dp_: Dispatcher) -> None:
-    """Регистрация всех handler-функций для админа."""
-    dp_.register_callback_query_handler(
-        cancel_handler, text="cancel_call", state="*"
-    )
-    dp_.register_message_handler(
-        queues_list_handler, Text(equals='🗒 Список запланированных очередей'), state=None
-    )
-    dp_.register_message_handler(
-        queues_list_handler, commands="queues_list", state=None
-    )
-    # Plan queue.
-    dp_.register_message_handler(
-        queue_plan_handler, Text(equals='📌 Запланировать очередь'), state=None
-    )
-    dp_.register_message_handler(
-        queue_plan_handler, commands='plan_queue', state=None
-    )
-    dp_.register_callback_query_handler(
-        queue_plan_inline_handler, text="plan_queue", state=None
-    )
-    dp_.register_callback_query_handler(
-        queue_set_chat_handler, Text(startswith='choose_chat_'), state=FSMPlanning.choose_chat
-    )
-    dp_.register_message_handler(
-        set_queue_name_handler, content_types='text', state=FSMPlanning.queue_name
-    )
-    dp_.register_callback_query_handler(
-        set_date_handler, calendar_kb.calendar_callback.filter(), state=FSMPlanning.start_date
-    )
-    dp_.register_message_handler(
-        set_datetime_handler, content_types='text', state=FSMPlanning.start_datetime
-    )
-    # Delete queue.
-    dp_.register_message_handler(
-        choose_queue_to_delete_handler, Text(equals='🗑 Удалить очередь'), state=None
-    )
-    dp_.register_message_handler(
-        choose_queue_to_delete_handler, Text(equals='🗑 Удалить очередь'), commands='delete_queue', state=None
-    )
-    dp_.register_callback_query_handler(
-        delete_queue_handler, Text(startswith='delete_queue_'), state=FSMDeletion.queue_choice
-    )

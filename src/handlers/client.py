@@ -1,13 +1,14 @@
-from aiogram import types, Dispatcher
+from aiogram import types
 from aiogram.dispatcher.filters import Text
 from aiogram.utils.exceptions import RetryAfter
 
-from src.create_bot import dp, bot
+from src.loader import dp, bot
 from src.keyboards.client_kb import main_kb, queue_inl_kb
 from src.services import client_service
 from src.services.client_service import QueueStatus
 
 
+@dp.message_handler(commands='start', state=None)
 async def start_handler(message: types.Message):
     """Функция-handler для команды `/start`."""
     await bot.send_message(
@@ -21,6 +22,7 @@ async def start_handler(message: types.Message):
     )
 
 
+@dp.message_handler(commands="help", state=None)
 async def help_handler(message: types.Message):
     """Функция-handler для команды `/help`."""
     await bot.send_message(
@@ -34,6 +36,7 @@ async def help_handler(message: types.Message):
     )
 
 
+@dp.errors_handler(exception=RetryAfter)
 async def flood_handler(update: types.Update, exception: RetryAfter):
     answer_msg = f"Не так быстро! Подождите {exception.timeout} секунд"
     if update.message is not None:
@@ -42,6 +45,7 @@ async def flood_handler(update: types.Update, exception: RetryAfter):
         await update.message.answer(answer_msg)
 
 
+@dp.callback_query_handler(Text(startswith='sign_in'), state="*")
 async def sign_in_queue_handler(callback: types.CallbackQuery):
     user = callback.from_user
     new_text, status_code = await client_service.add_queuer_text(
@@ -59,6 +63,7 @@ async def sign_in_queue_handler(callback: types.CallbackQuery):
             await callback.answer("❕ Вы уже в очереди.")
 
 
+@dp.callback_query_handler(Text(startswith='sign_out'), state="*")
 async def sign_out_queue_handler(callback: types.CallbackQuery):
     user = callback.from_user
     new_text, status_code = await client_service.delete_queuer_text(
@@ -77,6 +82,7 @@ async def sign_out_queue_handler(callback: types.CallbackQuery):
             await callback.answer(answer)
 
 
+@dp.callback_query_handler(Text(startswith='skip_ahead'), state="*")
 async def skip_ahead_handler(callback: types.CallbackQuery):
     user = callback.from_user
     new_text, status_code = await client_service.skip_ahead(
@@ -99,6 +105,7 @@ async def skip_ahead_handler(callback: types.CallbackQuery):
             await callback.answer("❕ Что-то пошло не так")
 
 
+@dp.callback_query_handler(Text(startswith='in_tail'), state="*")
 async def push_tail_handler(callback: types.CallbackQuery):
     user = callback.from_user
     new_text, status_code = await client_service.push_tail(
@@ -121,13 +128,12 @@ async def push_tail_handler(callback: types.CallbackQuery):
         case _:
             await callback.answer("❕ Что-то пошло не так")
 
-
-def register_client_handlers(dp_: Dispatcher) -> None:
-    """Регистрация всех handler-функций для клиента."""
-    dp_.register_message_handler(start_handler, commands='start', state=None)
-    dp_.register_message_handler(help_handler, commands="help", state=None)
-    dp_.register_errors_handler(flood_handler, exception=RetryAfter)
-    dp_.register_callback_query_handler(sign_in_queue_handler, Text(startswith='sign_in'), state="*")
-    dp_.register_callback_query_handler(sign_out_queue_handler, Text(startswith='sign_out'), state="*")
-    dp_.register_callback_query_handler(skip_ahead_handler, Text(startswith='skip_ahead'), state="*")
-    dp_.register_callback_query_handler(push_tail_handler, Text(startswith='in_tail'), state="*")
+# def register_client_handlers(dp_: Dispatcher) -> None:
+#     """Регистрация всех handler-функций для клиента."""
+#     dp_.register_message_handler(start_handler, commands='start', state=None)
+#     dp_.register_message_handler(help_handler, commands="help", state=None)
+#     dp_.register_errors_handler(flood_handler, exception=RetryAfter)
+#     dp_.register_callback_query_handler(sign_in_queue_handler, Text(startswith='sign_in'), state="*")
+#     dp_.register_callback_query_handler(sign_out_queue_handler, Text(startswith='sign_out'), state="*")
+#     dp_.register_callback_query_handler(skip_ahead_handler, Text(startswith='skip_ahead'), state="*")
+#     dp_.register_callback_query_handler(push_tail_handler, Text(startswith='in_tail'), state="*")

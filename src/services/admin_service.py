@@ -3,8 +3,7 @@ from pytz import timezone
 import asyncio
 from aiogram.utils.exceptions import BadRequest
 
-from src.create_bot import bot
-from src.db.sqlite_db import sql_get_queue_from_list, sql_post_queue_msg_id
+from src.loader import bot, db
 from src.keyboards import client_kb
 
 
@@ -21,7 +20,7 @@ async def wait_for_queue_launch(start_dt: dt.datetime, chat_id: int, queue_id: i
     )
 
     # Проверим, что очередь не была удалена.
-    queue_data = await sql_get_queue_from_list(queue_id)
+    queue_data = await db.get_queue_from_list(queue_id)
     if not queue_data:
         await bot.send_message(
             chat_id=chat_id,
@@ -39,7 +38,7 @@ async def wait_for_queue_launch(start_dt: dt.datetime, chat_id: int, queue_id: i
     except BadRequest:
         pass
 
-    await sql_post_queue_msg_id(queue_id, msg.message_id)
+    await db.post_queue_msg_id(queue_id, msg.message_id)
 
 
 def parse_to_datetime(date: dt.datetime, input_time: str) -> dt.datetime:
