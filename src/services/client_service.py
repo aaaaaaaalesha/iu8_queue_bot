@@ -18,7 +18,6 @@ async def add_queuer_text(old_text: str, first_name: str, username: str) -> tupl
             return str(), QueueStatus.EXISTS
 
     lines.append(f"{len(lines) - 1}. {match_str}")
-
     return '\n'.join(lines), QueueStatus.OK
 
 

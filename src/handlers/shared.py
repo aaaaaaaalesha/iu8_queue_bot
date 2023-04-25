@@ -1,35 +1,29 @@
-from aiogram import types, Dispatcher
+from aiogram import types
 
-from src.create_bot import dp, bot
-from src.db.sqlite_db import sql_add_admin, sql_add_managed_chat, sql_delete_managed_chat
+from src.__main__ import dp, bot, db
 
 
+@dp.message_handler(content_types=types.ContentTypes.NEW_CHAT_MEMBERS)
 async def new_chat_handler(message: types.Message) -> None:
     """
     Функция-handler обработки добавления бота в групповой чат.
     """
-    # Check that bot has been added to chat.
+    # Проверяем, что бот был добавлен в чат.
     if any(bot.id == member.id for member in message.new_chat_members):
         user = message.from_user
-        await sql_add_admin(user.id, user.username)
-        await sql_add_managed_chat(user.id, message.chat.id, message.chat.title)
+        await db.add_admin(user.id, user.username)
+        await db.add_managed_chat(user.id, message.chat.id, message.chat.title)
         await message.reply(
-            f"Привет! Теперь {user.first_name} (@{user.username}) – "
-            "администратор очередей в этом чате.\n"
-            "Запланировать её можно в личном чате со мной. Приятной работы!"
+            f'Привет! Теперь {user.first_name} (@{user.username}) – '
+            'администратор очередей в этом чате.\n'
+            'Запланировать её можно в личном чате со мной. Приятной работы!'
         )
 
 
+@dp.message_handler(content_types=types.ContentTypes.LEFT_CHAT_MEMBER)
 async def left_chat_handler(message: types.Message) -> None:
     """
     Функция-handler обработки удаления бота из группового чата.
     """
-    # Check that bot has been deleted from chat.
     if bot.id == message.left_chat_member.id:
-        await sql_delete_managed_chat(message.chat.id)
-
-
-def register_shared_handlers(dp_: Dispatcher) -> None:
-    """Регистрация всех публичных handler-функций."""
-    dp_.register_message_handler(new_chat_handler, content_types=types.ContentTypes.NEW_CHAT_MEMBERS)
-    dp_.register_message_handler(left_chat_handler, content_types=types.ContentTypes.LEFT_CHAT_MEMBER)
+        await db.delete_managed_chat(message.chat.id)
