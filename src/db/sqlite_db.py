@@ -1,9 +1,7 @@
 import os
 import sqlite3
 import logging
-
-from datetime import datetime
-from typing import Tuple
+import datetime as dt
 
 conn = sqlite3.connect(
     os.getenv(
@@ -110,7 +108,13 @@ async def sql_delete_managed_chat(chat_id_: int) -> None:
     conn.commit()
 
 
-async def sql_add_queue(admin_id_: int, queue_name_: str, start_dt: datetime, chat_id_: int, chat_title_: str) -> tuple:
+async def sql_add_queue(
+        admin_id_: int,
+        queue_name_: str,
+        start_dt: dt.datetime,
+        chat_id_: int,
+        chat_title_: str,
+) -> tuple:
     cursor.execute(
         "INSERT INTO queues_list "
         "('assignee_id', 'queue_name', 'start', 'chat_id', 'chat_title') "
@@ -128,7 +132,7 @@ async def sql_add_queue(admin_id_: int, queue_name_: str, start_dt: datetime, ch
     return cursor.fetchone()
 
 
-async def sql_delete_queue(id_: int) -> Tuple[int, int]:
+async def sql_delete_queue(id_: int) -> tuple[int, int]:
     cursor.execute(
         "SELECT chat_id "
         "FROM queues_list "

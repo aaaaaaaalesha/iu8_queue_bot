@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime as dt
 from pytz import timezone
 import asyncio
 from aiogram.utils.exceptions import BadRequest
@@ -12,12 +12,12 @@ class EarlierException(Exception):
     pass
 
 
-async def wait_for_queue_launch(start_dt: datetime, chat_id: int, queue_id: int) -> None:
+async def wait_for_queue_launch(start_dt: dt.datetime, chat_id: int, queue_id: int) -> None:
     """
     Ожидание начала запуска очереди в групповом чате.
     """
     await asyncio.sleep(
-        (start_dt - datetime.now(timezone('Europe/Moscow'))).seconds
+        (start_dt - dt.datetime.now(timezone('Europe/Moscow'))).seconds
     )
 
     # Проверим, что очередь не была удалена.
@@ -42,11 +42,11 @@ async def wait_for_queue_launch(start_dt: datetime, chat_id: int, queue_id: int)
     await sql_post_queue_msg_id(queue_id, msg.message_id)
 
 
-def parse_to_datetime(date: datetime, input_time: str) -> datetime:
+def parse_to_datetime(date: dt.datetime, input_time: str) -> dt.datetime:
     """
     Парсинг времени в формате hh:mm, а также проверка, что введённое время позже указанного.
     """
-    dt_now = datetime.now(timezone('Europe/Moscow'))
+    dt_now = dt.datetime.now(timezone('Europe/Moscow'))
     h, m = tuple(map(int, input_time.split(':')))
 
     resulted_date = date

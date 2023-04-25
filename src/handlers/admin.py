@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime as dt
 
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
@@ -67,8 +67,8 @@ async def queues_list_handler(msg: types.Message) -> tuple:
 
     out_str = '\n'.join([
         f"📌«{queue_name}» в чате «{chat_title}» "
-        f"{datetime.strptime(dt, '%Y-%m-%d %H:%M:%S%z').strftime('%d.%m.%Y в %H:%M')}"
-        for _, queue_name, dt, _, chat_title in found_queues
+        f"{dt.datetime.strptime(time, '%Y-%m-%d %H:%M:%S%z').strftime('%d.%m.%Y в %H:%M')}"
+        for _, queue_name, time, _, chat_title in found_queues
     ])
 
     planned_msg = await bot.send_message(
@@ -208,7 +208,6 @@ async def set_datetime_handler(msg: types.Message, state: FSMContext) -> None:
     Функция-handler сохранения времени и других собранных данных в БД.
     Выдаёт информационное сообщение о запуске очереди и начинает ожидание.
     """
-    start_datetime: datetime
     async with state.proxy() as data:
         try:
             start_datetime = parse_to_datetime(data["selected_date"], msg.text)
