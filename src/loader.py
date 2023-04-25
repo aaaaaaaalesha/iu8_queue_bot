@@ -13,7 +13,7 @@ load_dotenv('.env')
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO)
 
-# Инициализация бота, диспетчера, бд.
+# Инициализация бота, диспетчера, базы данных.
 bot = Bot(token=os.getenv('TELE_API_TOKEN'))
 dp = Dispatcher(bot, storage=MemoryStorage())
 db = Database()

@@ -1,13 +1,12 @@
 from aiogram import executor
 
 from src.loader import logger, bot, dp, db
-from handlers import admin, client, shared
 
 
 async def on_startup(_) -> None:
     await db.connect()
     await db.create_tables()
-    logger.info("Bot now is online!")
+    logger.info('Bot now is online!')
 
 
 async def on_startup_wrapper(dp) -> None:

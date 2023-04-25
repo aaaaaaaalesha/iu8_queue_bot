@@ -8,15 +8,15 @@ async def new_chat_handler(message: types.Message) -> None:
     """
     Функция-handler обработки добавления бота в групповой чат.
     """
-    # Check that bot has been added to chat.
+    # Проверяем, что бот был добавлен в чат.
     if any(bot.id == member.id for member in message.new_chat_members):
         user = message.from_user
         await db.add_admin(user.id, user.username)
         await db.add_managed_chat(user.id, message.chat.id, message.chat.title)
         await message.reply(
-            f"Привет! Теперь {user.first_name} (@{user.username}) – "
-            "администратор очередей в этом чате.\n"
-            "Запланировать её можно в личном чате со мной. Приятной работы!"
+            f'Привет! Теперь {user.first_name} (@{user.username}) – '
+            'администратор очередей в этом чате.\n'
+            'Запланировать её можно в личном чате со мной. Приятной работы!'
         )
 
 

@@ -3,7 +3,6 @@ import datetime as dt
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
-from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import InlineKeyboardMarkup
 
 from src.keyboards.client_kb import (
@@ -17,23 +16,11 @@ from src.services.admin_service import (
     wait_for_queue_launch,
 )
 from src.loader import dp, db, bot
+from src.states.admin_states import FSMPlanning, FSMDeletion
 from src.keyboards import admin_kb, calendar_kb
 
 
-class FSMPlanning(StatesGroup):
-    """Конечный автомат для планирования очередей."""
-    choose_chat = State()
-    queue_name = State()
-    start_date = State()
-    start_datetime = State()
-
-
-class FSMDeletion(StatesGroup):
-    """Конечный автомат удаления очереди."""
-    queue_choice = State()
-
-
-@dp.callback_query_handler(text="cancel_call", state="*")
+@dp.callback_query_handler(text='cancel_call', state='*')
 async def cancel_handler(callback: types.CallbackQuery, state: FSMContext) -> None:
     """
     Функция-handler отмены действия.
@@ -44,7 +31,7 @@ async def cancel_handler(callback: types.CallbackQuery, state: FSMContext) -> No
     await state.finish()
 
 
-@dp.message_handler(commands="queues_list", state=None)
+@dp.message_handler(commands='queues_list')
 @dp.message_handler(Text(equals='🗒 Список запланированных очередей'), state=None)
 async def queues_list_handler(msg: types.Message) -> tuple:
     """
@@ -54,21 +41,21 @@ async def queues_list_handler(msg: types.Message) -> tuple:
     if not found_queues:
         await bot.send_message(
             msg.from_user.id,
-            "🙊 У вас пока нет запланированных очередей.\nЗапланируем одну?",
+            '🙊 У вас пока нет запланированных очередей.\nЗапланируем одну?',
             reply_markup=admin_kb.inl_plan_kb,
         )
 
         return found_queues, None
 
     out_str = '\n'.join([
-        f"📌«{queue_name}» в чате «{chat_title}» "
-        f"{dt.datetime.strptime(time, '%Y-%m-%d %H:%M:%S%z').strftime('%d.%m.%Y в %H:%M')}"
+        f'📌«{queue_name}» в чате «{chat_title}» '
+        f'{dt.datetime.strptime(time, "%Y-%m-%d %H:%M:%S%z").strftime("%d.%m.%Y в %H:%M")}'
         for _, queue_name, time, _, chat_title in found_queues
     ])
 
     planned_msg = await bot.send_message(
         msg.from_user.id,
-        f"⤵️ Вот запланированные вами очереди:\n{out_str}",
+        f'⤵️ Вот запланированные вами очереди:\n{out_str}',
     )
 
     return found_queues, planned_msg
@@ -89,8 +76,8 @@ async def __start_planning(action: types.Message | types.CallbackQuery) -> None:
     if not managed_chats:
         await bot.send_message(
             action.from_user.id,
-            "🙊 Вы пока не добавили меня ни в один групповой чат.\n"
-            "Я могу организовывать очереди только там 💁‍♂️",
+            '🙊 Вы пока не добавили меня ни в один групповой чат.\n'
+            'Я могу организовывать очереди только там 💁‍♂️',
         )
         return
 
@@ -102,25 +89,25 @@ async def __start_planning(action: types.Message | types.CallbackQuery) -> None:
         inl_kb_chat_choices.add(
             types.InlineKeyboardButton(
                 text=chat_title,
-                callback_data=f"choose_chat_{chat_id}",
+                callback_data=f'choose_chat_{chat_id}',
             )
         )
     inl_kb_chat_choices.add(admin_kb.cancel_button)
 
     await bot.send_message(
         action.from_user.id,
-        "⤵️Для начала выберите чат, в который вы добавили бота:",
+        '⤵️Для начала выберите чат, в который вы добавили бота:',
         reply_markup=inl_kb_chat_choices,
     )
 
 
-@dp.message_handler(Text(equals='📌 Запланировать очередь'), state=None)
+@dp.message_handler(Text(equals='📌 Запланировать очередь'))
 @dp.message_handler(commands='plan_queue', state=None)
 async def queue_plan_handler(msg: types.Message) -> None:
     await __start_planning(msg)
 
 
-@dp.callback_query_handler(text="plan_queue", state=None)
+@dp.callback_query_handler(text='plan_queue')
 async def queue_plan_inline_handler(callback: types.CallbackQuery) -> None:
     await __start_planning(callback)
 
@@ -133,11 +120,11 @@ async def queue_set_chat_handler(callback: types.CallbackQuery, state: FSMContex
     иначе отменяет действие.
     """
     async with state.proxy() as data:
-        chat_id = int(callback.data[len("choose_chat_"):])
+        chat_id = int(callback.data[len('choose_chat_'):])
         chat_title = await db.get_chat_title(chat_id)
         if not chat_title:
             await callback.answer(
-                "Кажется, бота уже нет в данном чате, попробуйте снова.",
+                'Кажется, бота уже нет в данном чате, попробуйте снова.',
             )
             await cancel_handler(callback, state)
             return
@@ -148,7 +135,7 @@ async def queue_set_chat_handler(callback: types.CallbackQuery, state: FSMContex
     await FSMPlanning.next()
     await bot.send_message(
         callback.from_user.id,
-        "📝 Задайте название очереди",
+        '📝 Задайте название очереди',
         reply_markup=admin_kb.inl_cancel_kb,
     )
 
@@ -194,7 +181,7 @@ async def set_date_handler(
     )
     if selected:
         async with state.proxy() as data:
-            data["selected_date"] = date
+            data['selected_date'] = date
 
         await FSMPlanning.next()
         await bot.send_message(
@@ -212,7 +199,7 @@ async def set_datetime_handler(msg: types.Message, state: FSMContext) -> None:
     """
     async with state.proxy() as data:
         try:
-            start_datetime = parse_to_datetime(data["selected_date"], msg.text)
+            start_datetime = parse_to_datetime(data['selected_date'], msg.text)
         except ValueError:
             await bot.send_message(
                 msg.from_user.id,
@@ -244,14 +231,14 @@ async def set_datetime_handler(msg: types.Message, state: FSMContext) -> None:
 
     await bot.send_message(
         msg.from_user.id,
-        f"✅ Очередь «{queue_name}» запланирована в чате «{chat_title}»!\n"
-        f"Начало очереди: {start_datetime.strftime('%d.%m.%Y в %H:%M')}",
+        f'✅ Очередь «{queue_name}» запланирована в чате «{chat_title}»!\n'
+        f'Начало очереди: {start_datetime.strftime("%d.%m.%Y в %H:%M")}',
     )
 
     await bot.send_message(
         chat_id,
-        f"✅ Очередь «{queue_name}» запланирована!\n"
-        f"Начало очереди: {start_datetime.strftime('%d.%m.%Y в %H:%M')}",
+        f'✅ Очередь «{queue_name}» запланирована!\n'
+        f'Начало очереди: {start_datetime.strftime("%d.%m.%Y в %H:%M")}',
     )
 
     await state.finish()
@@ -265,8 +252,8 @@ async def set_datetime_handler(msg: types.Message, state: FSMContext) -> None:
 """Deleting queue zone"""
 
 
-@dp.message_handler(commands='delete_queue', state=None)
-@dp.message_handler(Text(equals='🗑 Удалить очередь'), state=None)
+@dp.message_handler(commands='delete_queue')
+@dp.message_handler(Text(equals='🗑 Удалить очередь'))
 async def choose_queue_to_delete_handler(msg: types.Message) -> None:
     """
     Функция-handler выбора запланированной очереди для удаления.
@@ -278,8 +265,11 @@ async def choose_queue_to_delete_handler(msg: types.Message) -> None:
 
     inl_kb_choices = InlineKeyboardMarkup()
     for queue_id, queue_name, _, _, _ in planned_queues:
-        inl_kb_choices.add(types.InlineKeyboardButton(
-            text=queue_name, callback_data=f"delete_queue_{queue_id}")
+        inl_kb_choices.add(
+            types.InlineKeyboardButton(
+                text=queue_name,
+                callback_data=f'delete_queue_{queue_id}'
+            )
         )
     inl_kb_choices.add(admin_kb.cancel_button)
 
@@ -301,7 +291,7 @@ async def delete_queue_handler(callback: types.CallbackQuery, state: FSMContext)
     """
     Функция-handler удаления запланированной очереди.
     """
-    chat_id, msg_id = await db.delete_queue(int(callback.data[len("delete_queue_"):]))
+    chat_id, msg_id = await db.delete_queue(int(callback.data[len('delete_queue_'):]))
     try:
         await bot.delete_message(chat_id, msg_id)
         await messages_tuple[0].delete()
