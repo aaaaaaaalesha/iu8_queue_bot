@@ -1,8 +1,10 @@
+import asyncio
+
 from aiogram import types
 from aiogram.dispatcher.filters import Text
-from aiogram.utils.exceptions import RetryAfter
+from aiogram.utils import exceptions
 
-from src.loader import dp, bot
+from src.loader import dp, db, bot
 from src.keyboards.client_kb import main_kb, queue_inl_kb
 from src.services import client_service
 from src.services.client_service import QueueStatus
@@ -36,94 +38,120 @@ async def help_handler(message: types.Message):
     )
 
 
-@dp.errors_handler(exception=RetryAfter)
-async def flood_handler(update: types.Update, exception: RetryAfter):
-    answer_msg = f'Не так быстро! Подождите {exception.timeout} секунд'
-    if update.message is not None:
-        await update.message.answer(answer_msg)
-    elif update.callback_query is not None:
-        await update.message.answer(answer_msg)
+@dp.errors_handler(exception=exceptions.RetryAfter)
+async def flood_handler(update: types.Update, exception: exceptions.RetryAfter):
+    pass
+    # answer_msg = f'Не так быстро! Подождите {exception.timeout} секунд'
+    # if update.message is not None:
+    #    await update.message.answer(answer_msg)
+    # elif update.callback_query is not None:
+    #    await update.message.answer(answer_msg)
 
 
 @dp.callback_query_handler(Text(startswith='sign_in'), state='*')
 async def sign_in_queue_handler(callback: types.CallbackQuery):
     user = callback.from_user
-    new_text, status_code = await client_service.add_queuer_text(
-        callback.message.text,
-        user.first_name,
-        user.username,
-    )
-    match status_code:
-        case QueueStatus.OK:
-            await callback.message.edit_text(
-                text=new_text,
-                reply_markup=queue_inl_kb,
-            )
-        case QueueStatus.EXISTS:
-            await callback.answer('❕ Вы уже в очереди.')
+
+    async with asyncio.Lock():
+        old_text, = await db.get_queue_text(callback.message.message_id)
+        new_text, status_code = await client_service.add_queuer_text(
+            old_text,
+            user.first_name,
+            user.username,
+        )
+        match status_code:
+            case QueueStatus.OK:
+                await db.update_queue_text(
+                    callback.message.message_id,
+                    new_text,
+                )
+                await callback.message.edit_text(
+                    text=new_text,
+                    reply_markup=queue_inl_kb,
+                )
+            case QueueStatus.EXISTS:
+                await callback.answer('❕ Вы уже в очереди.')
 
 
 @dp.callback_query_handler(Text(startswith='sign_out'), state='*')
 async def sign_out_queue_handler(callback: types.CallbackQuery):
     user = callback.from_user
-    new_text, status_code = await client_service.delete_queuer_text(
-        callback.message.text,
-        user.first_name,
-        user.username,
-    )
+    async with asyncio.Lock():
+        old_text, = await db.get_queue_text(callback.message.message_id)
+        new_text, status_code = await client_service.delete_queuer_text(
+            old_text,
+            user.first_name,
+            user.username,
+        )
 
-    match status_code:
-        case QueueStatus.OK:
-            await callback.message.edit_text(
-                text=new_text,
-                reply_markup=queue_inl_kb,
-            )
-        case QueueStatus.EMPTY | QueueStatus.NOT_QUEUER as answer:
-            await callback.answer(answer)
+        match status_code:
+            case QueueStatus.OK:
+                await db.update_queue_text(
+                    callback.message.message_id,
+                    new_text,
+                )
+                await callback.message.edit_text(
+                    text=new_text,
+                    reply_markup=queue_inl_kb,
+                )
+            case QueueStatus.EMPTY | QueueStatus.NOT_QUEUER as answer:
+                await callback.answer(answer)
 
 
 @dp.callback_query_handler(Text(startswith='skip_ahead'), state='*')
 async def skip_ahead_handler(callback: types.CallbackQuery):
     user = callback.from_user
-    new_text, status_code = await client_service.skip_ahead(
-        callback.message.text,
-        user.first_name,
-        user.username,
-    )
-    match status_code:
-        case QueueStatus.OK:
-            await callback.message.edit_text(
-                text=new_text,
-                reply_markup=queue_inl_kb,
-            )
-        case (QueueStatus.EMPTY
-              | QueueStatus.ONE_QUEUER
-              | QueueStatus.NOT_QUEUER
-              | QueueStatus.NO_AFTER) as answer:
-            await callback.answer(answer)
-        case _:
-            await callback.answer('❕ Что-то пошло не так')
+    async with asyncio.Lock():
+        old_text, = await db.get_queue_text(callback.message.message_id)
+        new_text, status_code = await client_service.skip_ahead(
+            old_text,
+            user.first_name,
+            user.username,
+        )
+        match status_code:
+            case QueueStatus.OK:
+                await db.update_queue_text(
+                    callback.message.message_id,
+                    new_text,
+                )
+                await callback.message.edit_text(
+                    text=new_text,
+                    reply_markup=queue_inl_kb,
+                )
+            case (QueueStatus.EMPTY
+                  | QueueStatus.ONE_QUEUER
+                  | QueueStatus.NOT_QUEUER
+                  | QueueStatus.NO_AFTER) as answer:
+                await callback.answer(answer)
+            case _:
+                await callback.answer('❕ Что-то пошло не так')
 
 
 @dp.callback_query_handler(Text(startswith='in_tail'), state='*')
 async def push_tail_handler(callback: types.CallbackQuery):
     user = callback.from_user
-    new_text, status_code = await client_service.push_tail(
-        callback.message.text,
-        user.first_name,
-        user.username,
-    )
+    async with asyncio.Lock():
+        old_text, = await db.get_queue_text(callback.message.message_id)
+        new_text, status_code = await client_service.push_tail(
+            old_text,
+            user.first_name,
+            user.username,
+        )
 
-    match status_code:
-        case QueueStatus.OK:
-            await callback.message.edit_text(
-                text=new_text,
-                reply_markup=queue_inl_kb,
-            )
-        case (QueueStatus.EMPTY
-              | QueueStatus.ONE_QUEUER
-              | QueueStatus.NOT_QUEUER
-              | QueueStatus.NO_AFTER) as answer:
-            await callback.answer(answer)
-        case _:
-            await callback.answer('❕ Что-то пошло не так')
+        match status_code:
+            case QueueStatus.OK:
+                await db.update_queue_text(
+                    callback.message.message_id,
+                    new_text,
+                )
+                await callback.message.edit_text(
+                    text=new_text,
+                    reply_markup=queue_inl_kb,
+                )
+            case (QueueStatus.EMPTY
+                  | QueueStatus.ONE_QUEUER
+                  | QueueStatus.NOT_QUEUER
+                  | QueueStatus.NO_AFTER) as answer:
+                await callback.answer(answer)
+            case _:
+                await callback.answer('❕ Что-то пошло не так')

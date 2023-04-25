@@ -33,19 +33,7 @@ class Database:
 
         async with self.conn.execute(
                 "SELECT id, queue_name, start, chat_id, chat_title  "
-                "FROM queues_list "
-                "WHERE assignee_id = ?",
-                (admin_id_,),
-        ) as cursor:
-            return await cursor.fetchall()
-
-    async def get_queue_list(self, admin_id_: int) -> list:
-        if self.conn is None:
-            await self.connect()
-
-        async with self.conn.execute(
-                "SELECT id, queue_name, start, chat_id, chat_title  "
-                "FROM queues_list "
+                "FROM queue "
                 "WHERE assignee_id = ?",
                 (admin_id_,),
         ) as cursor:
@@ -57,9 +45,45 @@ class Database:
 
         async with self.conn.execute(
                 "SELECT *  "
-                "FROM queues_list "
+                "FROM queue "
                 "WHERE id = ?",
                 (id_,),
+        ) as cursor:
+            return await cursor.fetchone()
+
+    async def post_queue(self, queue_id_: int, msg_id_: int, msg_text: str):
+        if self.conn is None:
+            await self.connect()
+
+        async with self.conn.execute(
+                "UPDATE queue "
+                "SET msg_id = ?, msg_text = ?"
+                "WHERE id = ?",
+                (msg_id_, msg_text, queue_id_),
+        ):
+            await self.conn.commit()
+
+    async def update_queue_text(self, msg_id_: int, msg_text: str):
+        if self.conn is None:
+            await self.connect()
+
+        async with self.conn.execute(
+                "UPDATE queue "
+                "SET msg_text = ?"
+                "WHERE msg_id = ?",
+                (msg_text, msg_id_,),
+        ):
+            await self.conn.commit()
+
+    async def get_queue_text(self, msg_id_: int) -> str:
+        if self.conn is None:
+            await self.connect()
+
+        async with self.conn.execute(
+                "SELECT msg_text "
+                "FROM queue "
+                "WHERE msg_id = ?",
+                (msg_id_,),
         ) as cursor:
             return await cursor.fetchone()
 
@@ -127,7 +151,7 @@ class Database:
             await self.conn.commit()
 
         async with self.conn.execute(
-                "DELETE FROM queues_list "
+                "DELETE FROM queue "
                 "WHERE chat_id = ?",
                 (chat_id_,),
         ):
@@ -145,7 +169,7 @@ class Database:
             await self.connect()
 
         async with self.conn.execute(
-                "INSERT INTO queues_list "
+                "INSERT INTO queue "
                 "('assignee_id', 'queue_name', 'start', 'chat_id', 'chat_title') "
                 "VALUES (?, ?, ?, ?, ?)",
                 (admin_id_, queue_name_, start_dt, chat_id_, chat_title_),
@@ -154,7 +178,7 @@ class Database:
 
         async with self.conn.execute(
                 "SELECT id "
-                "FROM queues_list "
+                "FROM queue "
                 "WHERE assignee_id = ? AND queue_name = ? AND chat_id = ?",
                 (admin_id_, queue_name_, chat_id_),
         ) as cursor:
@@ -165,27 +189,12 @@ class Database:
             await self.connect()
 
         async with self.conn.execute(
-                "SELECT chat_id "
-                "FROM queues_list "
-                "WHERE id = ?",
-                (id_,),
-        ) as cursor:
-            chat_id: tuple = await cursor.fetchone()
-
-        async with self.conn.execute(
-                "DELETE FROM queues_list "
-                "WHERE id = ?",
-                (id_,),
-        ):
-            await self.conn.commit()
-
-        async with self.conn.execute(
-                "SELECT msg_id "
+                "SELECT chat_id, msg_id "
                 "FROM queue "
                 "WHERE id = ?",
                 (id_,),
         ) as cursor:
-            msg_id: tuple = await cursor.fetchone()
+            chat_id, msg_id = await cursor.fetchone()
 
         async with self.conn.execute(
                 "DELETE FROM queue "
@@ -194,16 +203,4 @@ class Database:
         ):
             await self.conn.commit()
 
-        return chat_id[0], msg_id[0]
-
-    async def post_queue_msg_id(self, queue_id_: int, msg_id_: int):
-        if self.conn is None:
-            await self.connect()
-
-        async with self.conn.execute(
-                "INSERT INTO queue "
-                "('id', 'msg_id') "
-                "VALUES (?, ?)",
-                (queue_id_, msg_id_),
-        ):
-            await self.conn.commit()
+        return chat_id, msg_id

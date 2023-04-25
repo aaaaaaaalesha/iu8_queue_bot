@@ -1,6 +1,5 @@
 -- DROP TABLE IF EXISTS admin;
 -- DROP TABLE IF EXISTS chat;
--- DROP TABLE IF EXISTS queues_list;
 -- DROP TABLE IF EXISTS queue;
 
 CREATE TABLE IF NOT EXISTS admin
@@ -17,18 +16,14 @@ CREATE TABLE IF NOT EXISTS chat
     chat_title  VARCHAR(255)
 );
 
-CREATE TABLE IF NOT EXISTS queues_list
+CREATE TABLE IF NOT EXISTS queue
 (
     id          INTEGER PRIMARY KEY,
     assignee_id INTEGER REFERENCES admin (admin_id),
     queue_name  VARCHAR(255),
     start       TIMESTAMP,
     chat_id     INTEGER,
-    chat_title  VARCHAR(255)
-);
-
-CREATE TABLE IF NOT EXISTS queue
-(
-    id     INTEGER REFERENCES queues_list (id),
-    msg_id INTEGER
+    chat_title  VARCHAR(255),
+    msg_id      INTEGER UNIQUE NULL,
+    msg_text    TEXT           NULL
 );

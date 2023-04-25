@@ -14,7 +14,6 @@ async def on_startup_wrapper(dp) -> None:
 
 
 if __name__ == '__main__':
-    # Запуск бота в режиме опроса.
     executor.start_polling(
         dispatcher=dp,
         on_startup=lambda dp: on_startup_wrapper(dp),
