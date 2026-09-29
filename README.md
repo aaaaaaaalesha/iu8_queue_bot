@@ -69,11 +69,13 @@
 
 Нужен Python 3.12+ (рекомендуется 3.13).
 
+Зависимости управляются через [Poetry](https://python-poetry.org/) (2.2+),
+версии зафиксированы в `poetry.lock`.
+
 ```bash
-python -m venv .venv && . .venv/bin/activate
-pip install -r requirements.txt
+poetry install --only main
 cp .env.example .env   # и укажите TELE_API_TOKEN
-python -m queue_bot
+poetry run python -m queue_bot
 ```
 
 Или в Docker:
@@ -83,7 +85,8 @@ docker build -t queue-bot .
 docker run -d --env-file .env -v queue-bot-data:/data queue-bot
 ```
 
-Для разработки: `pip install -e ".[dev]"`, затем `ruff check .`, `mypy` и `pytest`.
+Для разработки: `poetry install`, затем `poetry run ruff check .`, `poetry run mypy`
+и `poetry run pytest`. Обновить зависимости: `poetry update` (или `poetry add <пакет>`).
 
 ## Устройство
 
