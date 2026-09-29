@@ -85,8 +85,8 @@ docker build -t queue-bot .
 docker run -d --env-file .env -v queue-bot-data:/data queue-bot
 ```
 
-Автоматический деплой при влитии в `main` (GitHub Actions → Docker → сервер по SSH)
-и бесплатный хостинг описаны в [deploy/README.md](deploy/README.md).
+Деплой на сервер (GitHub Actions → Docker → сервер по SSH, запуск вручную)
+описан в [deploy/README.md](deploy/README.md).
 
 Для разработки: `poetry install`, затем `poetry run ruff check .`, `poetry run mypy`
 и `poetry run pytest`. Обновить зависимости: `poetry update` (или `poetry add <пакет>`).

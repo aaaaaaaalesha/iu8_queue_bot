@@ -1,11 +1,10 @@
 name: deploy
 
+# Manual only for now: Actions -> deploy -> Run workflow (see deploy/README.md).
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
-# Never run two deploys at once; a newer push waits for the current one.
+# Never run two deploys at once; a newer run waits for the current one.
 concurrency:
   group: deploy-production
   cancel-in-progress: false
@@ -47,7 +46,7 @@ jobs:
         with:
           context: .
           push: true
-          # amd64 for ordinary VPS, arm64 for Oracle Cloud Ampere (Always Free).
+          # Both x86-64 and ARM servers are supported.
           platforms: linux/amd64,linux/arm64
           tags: |
             ${{ steps.ref.outputs.image }}
