@@ -2,8 +2,10 @@ name: build
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ develop ]
   pull_request:
+  # Pushes to main run these checks from deploy.yaml before deploying.
+  workflow_call:
 
 jobs:
   build:
