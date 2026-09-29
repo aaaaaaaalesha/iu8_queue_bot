@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "iu8-queue-bot"
 version = "2.0.0"
@@ -20,10 +24,14 @@ dev = [
     "ruff>=0.16",
 ]
 
+[tool.setuptools.packages.find]
+include = ["queue_bot*"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
+pythonpath = ["."]
 
 [tool.ruff]
 target-version = "py312"
