@@ -3,8 +3,8 @@
 [comment]: <> (Badges)
 
 <p align="center">
-  <a href="https://img.shields.io/badge/aiogram-v.2.17.1-orange?style=plastic">
-    <img alt="Aiogram" src="https://img.shields.io/badge/aiogram-v.2.17.1-orange?style=plastic">
+  <a href="https://img.shields.io/badge/aiogram-v3.31-orange?style=plastic">
+    <img alt="Aiogram" src="https://img.shields.io/badge/aiogram-v3.31-orange?style=plastic">
   </a>
   <a href="https://github.com/aaaaaaaalesha/iu8_queue_bot/deployments/activity_log?environment=iu8-queue-bot">
     <img alt="Deployment" src="https://img.shields.io/github/deployments/aaaaaaaalesha/iu8_queue_bot/iu8-queue-bot?style=plastic">
@@ -64,6 +64,53 @@
 <p align="center">
 <img alt="queue_bot" src="https://raw.githubusercontent.com/aaaaaaaalesha/iu8_queue_bot/main/assets/how_to_use.gif"/>
 </p>
+
+## Запуск
+
+Нужен Python 3.12+ (рекомендуется 3.13).
+
+```bash
+python -m venv .venv && . .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env   # и укажите TELE_API_TOKEN
+python -m queue_bot
+```
+
+Или в Docker:
+
+```bash
+docker build -t queue-bot .
+docker run -d --env-file .env -v queue-bot-data:/data queue-bot
+```
+
+Для разработки: `pip install -e ".[dev]"`, затем `ruff check .`, `mypy` и `pytest`.
+
+## Устройство
+
+```
+queue_bot/
+├── app.py            # сборка Bot/Dispatcher, запуск и остановка
+├── config.py         # настройки из переменных окружения
+├── models.py         # доменные модели
+├── db/
+│   ├── database.py   # одно соединение aiosqlite, сериализованные транзакции
+│   ├── migrations.py # схема (PRAGMA user_version) и импорт данных старой версии
+│   └── repository.py # весь SQL; каждая операция с очередью — одна транзакция
+├── services/
+│   ├── scheduler.py  # запуск запланированных очередей (переживает перезапуск)
+│   ├── updater.py    # объединяющее обновление сообщения очереди
+│   ├── planning.py   # разбор времени запуска
+│   └── rendering.py  # тексты сообщений
+├── handlers/         # обработчики aiogram 3 (клиент, админ, события чата, ошибки)
+└── keyboards/        # клавиатуры и календарь
+```
+
+Состав очереди хранится в БД (`queue_members`), а не в тексте сообщения:
+каждое нажатие кнопки атомарно применяется к актуальному состоянию, поэтому
+одновременные нажатия не затирают друг друга. Сообщение очереди редактируется
+фоновой задачей, которая объединяет все нажатия за интервал
+`QUEUE_EDIT_INTERVAL` в одно редактирование — бот не упирается в лимиты
+Telegram, даже когда в очередь встают десятки людей одновременно.
 
 ## Author
 
