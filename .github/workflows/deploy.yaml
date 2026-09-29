@@ -29,7 +29,7 @@ jobs:
     outputs:
       image: ${{ steps.ref.outputs.image }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Image reference
         id: ref
         # GHCR requires lowercase names.
@@ -62,7 +62,7 @@ jobs:
       contents: read
       packages: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Check secrets
         env:
