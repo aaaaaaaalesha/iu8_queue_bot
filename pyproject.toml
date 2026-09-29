@@ -1,0 +1,54 @@
+[build-system]
+requires = ["poetry-core>=2.0,<3"]
+build-backend = "poetry.core.masonry.api"
+
+[project]
+name = "iu8-queue-bot"
+version = "2.0.0"
+description = "Telegram bot for queues in group chats"
+readme = "README.md"
+requires-python = ">=3.12,<3.15"
+authors = [{ name = "Alexey Alexandrov" }]
+dependencies = [
+    "aiogram>=3.31,<4",
+    "aiosqlite>=0.22",
+    "python-dotenv>=1.2",
+    "tzdata",  # IANA time zones for zoneinfo on systems without them
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=2.3",
+    "pytest>=9.1",
+    "pytest-asyncio>=1.4",
+    "ruff>=0.16",
+]
+
+[tool.poetry]
+packages = [{ include = "queue_bot" }]
+requires-poetry = ">=2.2"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "ASYNC", "RUF"]
+ignore = [
+    "RUF001",   # Cyrillic letters in user-facing strings are intended
+    "SIM105",   # explicit try/except reads better around awaited API calls
+    "ASYNC109", # BaseSession.make_request signature is defined by aiogram
+    "ASYNC110", # the scheduler deliberately sleeps in bounded chunks
+]
+
+[tool.mypy]
+python_version = "3.13"
+packages = ["queue_bot"]
+strict = true
+plugins = ["pydantic.mypy"]

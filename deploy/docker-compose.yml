@@ -1,0 +1,22 @@
+# Production stack. The deploy workflow copies this file to the server and
+# runs `docker compose up -d` with BOT_IMAGE pointing to the new image.
+services:
+  bot:
+    image: ${BOT_IMAGE:-ghcr.io/aaaaaaaalesha/iu8_queue_bot:latest}
+    # TELE_API_TOKEN and other settings; written by the deploy workflow.
+    env_file: .env
+    environment:
+      DATABASE_PATH: /data/queue_bot.db
+    volumes:
+      - bot-data:/data
+    restart: unless-stopped
+    # Give the bot time to finish in-flight updates on redeploy.
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  bot-data:

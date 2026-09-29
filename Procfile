@@ -1,1 +1,1 @@
-bot: python src/main.py
+bot: python -m queue_bot
