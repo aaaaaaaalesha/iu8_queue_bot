@@ -12,7 +12,7 @@ authors = [{ name = "Alexey Alexandrov" }]
 dependencies = [
     "aiogram>=3.31,<4",
     "aiosqlite>=0.22",
-    "python-dotenv>=1.2",
+    "python-dotenv>=1.2.4",
     "tzdata",  # IANA time zones for zoneinfo on systems without them
 ]
 
